@@ -9,22 +9,30 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
-
+import { ConnectButton } from "thirdweb/react";
+import { client } from "@/lib/thirdweb";
+import { useActiveWallet } from "thirdweb/react";
+import { usePathname } from "next/navigation";
 interface ToolbarProps {
   title: string;
   showBackButton?: boolean;
-  isWalletConnected?: boolean;
-  onWalletConnect?: () => void;
+  isWalletConnected?: boolean; // Keep for backwards compatibility but derive from thirdweb
 }
 
 export function Toolbar({ 
   title, 
   showBackButton = false, 
-  isWalletConnected = false,
-  onWalletConnect 
+  isWalletConnected: legacyProp // Ignore this, we'll use thirdweb state
 }: ToolbarProps) {
+  const activeWallet = useActiveWallet();
+  const isWalletConnected = !!activeWallet;
+  const pathname = usePathname();
+  const isPathArtist = pathname === "/artist";
+  const isPathMain = pathname === "/main";
+  const isPathCreate = pathname === "/create";          
+
   return (
-    <div className="fixed left-0 top-0 backdrop-blur-xl w-screen  bg-background z-50 px-5 lg:px-8 py-4 lg:py-6 border-b border-border flex items-center justify-between">
+    <div className="fixed backdrop-blur-lg left-0 w-screen top-0 bg-background z-50 px-5 lg:px-8 py-4 lg:py-6 border-b border-border flex items-center justify-between">
       <div className="flex items-center flex-1">
         {showBackButton && (
           <Button variant="ghost" size="sm" asChild className="mr-2 lg:mr-4">
@@ -46,26 +54,24 @@ export function Toolbar({
           </Link>
         ) : (
           <div className="flex items-center space-x-2 lg:space-x-4">
+            {/* Wallet Connection / User Profile */}
             {isWalletConnected ? (
               <Link href="/artist">
                 <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-muted cursor-pointer" />
               </Link>
-            ) : (
-              <Button variant="ghost" size="sm" onClick={onWalletConnect} className="lg:text-base">
-                Log in
-              </Button>
-            )}
+            ) : null}
+
 
             {/* Desktop Navigation - show menu items directly on large screens */}
             <div className="hidden lg:flex items-center space-x-2">
-              <Button variant="ghost" size="sm" asChild>
+              <Button variant={isPathMain ? "secondary" : "ghost"} size="sm" asChild>
                 <Link href="/main">Home</Link>
               </Button>
-              <Button variant="ghost" size="sm" asChild>
+              <Button variant={isPathArtist ? "secondary" : "ghost"} size="sm" asChild>
                 <Link href="/artist">Profile</Link>
               </Button>
               {isWalletConnected && (
-                <Button variant="ghost" size="sm" asChild>
+                <Button variant={isPathCreate ? "secondary" : "ghost"} size="sm" asChild>
                   <Link href="/create">Create</Link>
                 </Button>
               )}
@@ -79,7 +85,7 @@ export function Toolbar({
                     <Menu className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuContent align="end" className="w-48 ">
                   <DropdownMenuItem asChild>
                     <Link href="/main" className="flex items-center">
                       <span className="mr-2">🏠</span> Home
@@ -99,22 +105,72 @@ export function Toolbar({
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>
+            </div>
 
-              
+
+            {/* Native thirdweb ConnectButton - Mobile (avatar only) */}
+            <div className="lg:hidden">
+              <ConnectButton
+                client={client}
+                connectModal={{
+                  size: "compact",
+                  title: "Connect Wallet",
+                  welcomeScreen: {
+                    title: "Connect to Permalink",
+                    subtitle: "Connect your wallet to start creating, collecting, and trading digital art on Etherlink",
+                  },
+                }}
+                connectButton={{
+                    label: "Log in",
+                    style: {
+                      height: "32px",
+                      padding: "0",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      minWidth: "80px",
+                    }
+                }}
+                detailsButton={{
+                  render: () => (
+                    <div className="w-8 h-8 rounded-full border flex items-center justify-center cursor-pointer">
+                      <User className="w-4 h-4 text-white" />
+                    </div>
+                  )
+                }}
+                appMetadata={{
+                  name: "Permalink",
+                }}
+              />
+            </div>
+
+            {/* Native thirdweb ConnectButton - Desktop */}
+            <div className="hidden lg:block">
+              <ConnectButton
+                client={client}
+                connectModal={{
+                  size: "compact",
+                  title: "Connect Wallet",
+                  welcomeScreen: {
+                    title: "Connect to Permalink",
+                    subtitle: "Connect your wallet to start creating, collecting, and trading digital art on Etherlink",
+                  },
+                }}
+                connectButton={{
+                  label: "Log in",
+                  style: {
+                    height: "32px",
+                    padding: "0",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    minWidth: "80px",
+                  }
+                }}
+              />
             </div>
           </div>
-        )}      
-        
-        {/* Sync Indicator */}
-        <div className="">
-          <div className={`px-3 py-2 rounded-full text-xs border ${
-            isWalletConnected 
-              ? 'text-green-400 border-green-400 cursor-pointer' 
-              : 'text-muted-foreground border-ring'
-          }`}>
-            {isWalletConnected ? 'Wallet Connected' : 'Wallet Not Connected'}
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

@@ -36,6 +36,23 @@
   --radius: 0.75rem;
 }
 
+/* Force the specific colors we need */
+.bg-popover {
+  background-color: hsl(var(--popover)) !important;
+}
+
+.bg-card {
+  background-color: hsl(var(--card)) !important;
+}
+
+.text-popover-foreground {
+  color: hsl(var(--popover-foreground)) !important;
+}
+
+.border {
+  border-color: hsl(var(--border)) !important;
+}
+
 * {
   border-color: hsl(var(--border));
 }

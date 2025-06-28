@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Copy } from "lucide-react";
 import { Toolbar } from "@/components/toolbar";
 import { DropCard } from "@/components/drop-card";
+import { MainContainer } from "@/components/main-container";
 
 export default function ArtistPage() {
   const [copiedAddress, setCopiedAddress] = useState(false);
@@ -82,7 +83,7 @@ export default function ArtistPage() {
   };
 
   return (
-    <div className="container-responsive">
+    <MainContainer>
       <Toolbar title="FromFriends™" showBackButton={true} isWalletConnected={true} />
 
       <div className="animate-fade-in">
@@ -91,7 +92,7 @@ export default function ArtistPage() {
           {/* Artist Header - Spans full width on mobile, left column on desktop */}
           <div className="lg:col-span-4">
             <div className="text-center lg:text-left py-8 px-5 lg:px-0 border-b lg:border-b-0 border-border">
-              <div className="w-20 h-20 lg:w-32 lg:h-32 rounded-full bg-muted mx-auto lg:mx-0 mb-4 lg:mb-6" />
+              <div className="w-20 h-20 lg:w-32 lg:h-32 rounded-full bg-muted border mx-auto lg:mx-0 mb-4 lg:mb-6" />
               <h1 className="text-2xl lg:text-3xl font-bold mb-2">{artistData.name}</h1>
               
               <div className="inline-flex items-center bg-secondary text-muted-foreground px-3 py-2 rounded-lg text-sm font-mono mb-4 lg:mb-6">
@@ -179,6 +180,6 @@ export default function ArtistPage() {
           Address copied to clipboard!
         </div>
       )}
-    </div>
+    </MainContainer>
   );
 } 

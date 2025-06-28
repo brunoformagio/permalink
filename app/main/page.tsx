@@ -5,13 +5,15 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, User, Wallet } from "lucide-react";
-import { WalletConnectionCard } from "@/components/wallet-connection-card";
 import { DropCard } from "@/components/drop-card";
 import { Toolbar } from "@/components/toolbar";
+import { WalletConnect } from "@/components/wallet-connect";
+import { useActiveWallet } from "thirdweb/react";
 import { MainContainer } from "@/components/main-container";
 
 export default function MainPage() {
-  const [isWalletConnected, setIsWalletConnected] = useState(false);
+  const activeWallet = useActiveWallet();
+  const isWalletConnected = !!activeWallet;
 
   const featuredDrop = {
     id: "1",
@@ -58,7 +60,6 @@ export default function MainPage() {
         title="Home"
         showBackButton={true}
         isWalletConnected={isWalletConnected}
-        onWalletConnect={() => setIsWalletConnected(true)}
       />
 
       <div className="animate-fade-in p-5 lg:px-8 pb-24">
@@ -66,10 +67,10 @@ export default function MainPage() {
         <div className="lg:grid lg:grid-cols-12 lg:gap-8">
           {/* Main Content */}
           <div className="lg:col-span-8">
-            {/* Wallet Sync Card - Full width on desktop when shown */}
+            {/* Wallet Connection Card - Show when wallet not connected */}
             {!isWalletConnected && (
               <div className="mb-6 lg:mb-8">
-                <WalletConnectionCard onConnect={() => setIsWalletConnected(true)} />
+                <WalletConnect showCard={true} />
               </div>
             )}
 
@@ -134,14 +135,11 @@ export default function MainPage() {
                         View Profile
                       </Link>
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start"
-                      onClick={() => setIsWalletConnected(!isWalletConnected)}
-                    >
-                      <Wallet className="mr-2 h-4 w-4" />
-                      {isWalletConnected ? 'Disconnect' : 'Connect'} Wallet
-                    </Button>
+                    {isWalletConnected ? (
+                      <WalletConnect triggerText="Manage Wallet" />
+                    ) : (
+                      <WalletConnect triggerText="Connect Wallet" />
+                    )}
                   </div>
                 </CardContent>
               </Card>
