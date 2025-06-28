@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 
 interface Shape {
   x: number;
@@ -21,30 +21,21 @@ export function GenerativeArt({ isPlaying, onGenerationChange }: GenerativeArtPr
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationIdRef = useRef<number | null>(null);
   const timeRef = useRef(0);
-  const [generation, setGeneration] = useState(1);
-  const [shapes, setShapes] = useState<Shape[]>([]);
+  
   const [colors, setColors] = useState<string[]>([]);
+  const [shapes, setShapes] = useState<Shape[]>([]);
+  const [generation, setGeneration] = useState(1);
 
-  const generateColorPalette = () => {
-    const hue = Math.random() * 360;
-    return [
-      `hsl(${hue}, 70%, 50%)`,
-      `hsl(${(hue + 60) % 360}, 70%, 60%)`,
-      `hsl(${(hue + 120) % 360}, 70%, 40%)`,
-      `hsl(${(hue + 180) % 360}, 70%, 55%)`,
-      `hsl(${(hue + 240) % 360}, 70%, 45%)`
-    ];
-  };
+  const generateColorPalette = useCallback(() => {
+    const hues = Array.from({ length: 3 }, () => Math.floor(Math.random() * 360));
+    return hues.map(hue => `hsl(${hue}, ${60 + Math.random() * 40}%, ${50 + Math.random() * 30}%)`);
+  }, []);
 
-  const generateShapes = (canvasWidth: number, canvasHeight: number) => {
+  const generateShapes = useCallback((canvasWidth: number, canvasHeight: number) => {
     const newShapes: Shape[] = [];
-    // Scale number of shapes based on canvas size (more shapes for larger canvases)
-    const baseShapes = 8;
-    const scaleFactor = Math.min(canvasWidth, canvasHeight) / 400;
-    const numShapes = Math.floor(baseShapes + (scaleFactor * 8)) + Math.floor(Math.random() * 12);
+    const shapeCount = 8 + Math.floor(Math.random() * 5);
     
-    for (let i = 0; i < numShapes; i++) {
-      // Scale radius based on canvas size
+    for (let i = 0; i < shapeCount; i++) {
       const minRadius = Math.min(canvasWidth, canvasHeight) * 0.03;
       const maxRadius = Math.min(canvasWidth, canvasHeight) * 0.15;
       
@@ -60,58 +51,50 @@ export function GenerativeArt({ isPlaying, onGenerationChange }: GenerativeArtPr
     }
     
     return newShapes;
-  };
+  }, [colors]);
 
-  const setupCanvas = () => {
+  const setupCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const container = canvas.parentElement;
     if (!container) return;
 
-    // Get container dimensions
     const containerRect = container.getBoundingClientRect();
     const size = Math.min(containerRect.width, containerRect.height);
     
-    // Set canvas size with device pixel ratio for crisp rendering
     const dpr = window.devicePixelRatio || 1;
     canvas.width = size * dpr;
     canvas.height = size * dpr;
     
-    // Scale the canvas back down using CSS
     canvas.style.width = `${size}px`;
     canvas.style.height = `${size}px`;
     
-    // Scale the drawing context so everything draws at the higher resolution
     const ctx = canvas.getContext('2d');
     if (ctx) {
       ctx.scale(dpr, dpr);
     }
     
     return size;
-  };
+  }, []);
 
-  const render = () => {
+  const render = useCallback(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || shapes.length === 0) return;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
     const canvasSize = Math.min(canvas.width, canvas.height) / (window.devicePixelRatio || 1);
 
-    // Clear canvas with dark background
     ctx.fillStyle = '#0a0a0a';
     ctx.fillRect(0, 0, canvasSize, canvasSize);
 
-    // Set blend mode for glowing effect
     ctx.globalCompositeOperation = 'lighter';
 
-    // Render shapes
     for (let i = 0; i < shapes.length; i++) {
       const shape = shapes[i];
       
-      // Scale movement based on canvas size
       const movementScale = canvasSize / 400;
       const x = shape.x + Math.sin(timeRef.current * shape.speed + shape.angle) * (30 * movementScale);
       const y = shape.y + Math.cos(timeRef.current * shape.speed + shape.angle) * (20 * movementScale);
@@ -126,7 +109,6 @@ export function GenerativeArt({ isPlaying, onGenerationChange }: GenerativeArtPr
       ctx.fill();
     }
 
-    // Draw connecting lines
     ctx.globalCompositeOperation = 'source-over';
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
     ctx.lineWidth = 1;
@@ -151,18 +133,18 @@ export function GenerativeArt({ isPlaying, onGenerationChange }: GenerativeArtPr
         ctx.stroke();
       }
     }
-  };
+  }, [shapes]);
 
-  const animate = () => {
+  const animate = useCallback(() => {
     timeRef.current += 0.02;
     render();
     
     if (isPlaying) {
       animationIdRef.current = requestAnimationFrame(animate);
     }
-  };
+  }, [isPlaying, render]);
 
-  const randomize = () => {
+  const randomize = useCallback(() => {
     const newGeneration = generation + 1;
     setGeneration(newGeneration);
     onGenerationChange(newGeneration);
@@ -178,8 +160,7 @@ export function GenerativeArt({ isPlaying, onGenerationChange }: GenerativeArtPr
     
     setColors(newColors);
     setShapes(newShapes);
-    render();
-  };
+  }, [generation, onGenerationChange, setupCanvas, generateColorPalette, generateShapes]);
 
   // Initialize artwork
   useEffect(() => {
@@ -188,7 +169,7 @@ export function GenerativeArt({ isPlaying, onGenerationChange }: GenerativeArtPr
       const newColors = generateColorPalette();
       setColors(newColors);
     }
-  }, []);
+  }, [setupCanvas, generateColorPalette]);
 
   // Generate shapes when colors are ready
   useEffect(() => {
@@ -200,14 +181,14 @@ export function GenerativeArt({ isPlaying, onGenerationChange }: GenerativeArtPr
         setShapes(newShapes);
       }
     }
-  }, [colors]);
+  }, [colors, generateShapes]);
 
   // Render when shapes are ready
   useEffect(() => {
     if (shapes.length > 0) {
       render();
     }
-  }, [shapes]);
+  }, [shapes, render]);
 
   // Handle animation
   useEffect(() => {
@@ -222,14 +203,13 @@ export function GenerativeArt({ isPlaying, onGenerationChange }: GenerativeArtPr
         cancelAnimationFrame(animationIdRef.current);
       }
     };
-  }, [isPlaying, shapes]);
+  }, [isPlaying, shapes.length, animate]);
 
   // Handle resize
   useEffect(() => {
     const handleResize = () => {
       const canvasSize = setupCanvas();
-      if (canvasSize && shapes.length > 0) {
-        // Regenerate shapes for new canvas size
+      if (canvasSize && colors.length > 0) {
         const newShapes = generateShapes(canvasSize, canvasSize);
         setShapes(newShapes);
       }
@@ -237,7 +217,7 @@ export function GenerativeArt({ isPlaying, onGenerationChange }: GenerativeArtPr
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [colors]);
+  }, [setupCanvas, generateShapes, colors.length]);
 
   return {
     canvasRef,

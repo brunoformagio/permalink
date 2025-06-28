@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Shuffle, Play, Pause, Wallet, Heart, Share2 } from "lucide-react";
@@ -13,11 +13,7 @@ export default function ItemPage() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [generation, setGeneration] = useState(1);
   const [isLiked, setIsLiked] = useState(false);
-  const [artComponent, setArtComponent] = useState<{
-    canvasRef: React.RefObject<HTMLCanvasElement | null>;
-    generation: number;
-    randomize: () => void;
-  } | null>(null);
+  const [artComponent, setArtComponent] = useState<any>(null);
 
   const itemData = {
     title: "Digital Dreams",
@@ -49,7 +45,7 @@ export default function ItemPage() {
   };
 
   const handleMint = () => {
-    alert("This is a demo. Minting is not available.");
+    alert("Minting artwork... (Demo mode)");
   };
 
   const handleLike = () => {
@@ -57,17 +53,13 @@ export default function ItemPage() {
   };
 
   const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: `${itemData.title} by ${itemData.creator}`,
-        text: itemData.description,
-        url: window.location.href,
-      });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      alert("Link copied to clipboard!");
-    }
+    alert("Sharing artwork... (Demo mode)");
   };
+
+  // Use useCallback to prevent onComponentReady from changing on every render
+  const handleComponentReady = useCallback((component: any) => {
+    setArtComponent(component);
+  }, []);
 
   // Auto-play for 3 seconds on mount
   useEffect(() => {
@@ -113,7 +105,7 @@ export default function ItemPage() {
                   <ArtworkCanvas 
                     isPlaying={isPlaying}
                     onGenerationChange={setGeneration}
-                    onComponentReady={setArtComponent}
+                    onComponentReady={handleComponentReady}
                   />
                 </div>
               </div>
@@ -278,13 +270,13 @@ function ArtworkCanvas({
 }: { 
   isPlaying: boolean;
   onGenerationChange: (generation: number) => void;
-  onComponentReady: (component: { canvasRef: React.RefObject<HTMLCanvasElement | null>; generation: number; randomize: () => void; }) => void;
+  onComponentReady: (component: any) => void;
 }) {
   const artComponent = GenerativeArt({ isPlaying, onGenerationChange });
 
   useEffect(() => {
     onComponentReady(artComponent);
-  }, [artComponent, onComponentReady]);
+  }, []); // Only run once when component mounts
 
   return (
     <canvas 
