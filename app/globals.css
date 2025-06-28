@@ -1,0 +1,132 @@
+@import "tailwindcss";
+
+:root {
+  --background: 0 0% 4%;            /* #0a0a0a */
+  --foreground: 0 0% 100%;          /* #ffffff */
+  --card: 0 0% 7%;                  /* #111111 */
+  --card-foreground: 0 0% 100%;     /* #ffffff */
+  --popover: 0 0% 7%;               /* #111111 */
+  --popover-foreground: 0 0% 100%;  /* #ffffff */
+  --primary: 0 0% 100%;             /* #ffffff */
+  --primary-foreground: 0 0% 0%;    /* #000000 */
+  --secondary: 0 0% 10%;            /* #1a1a1a */
+  --secondary-foreground: 0 0% 100%; /* #ffffff */
+  --muted: 0 0% 10%;                /* #1a1a1a */
+  --muted-foreground: 0 0% 53%;     /* #888888 */
+  --accent: 0 0% 10%;               /* #1a1a1a */
+  --accent-foreground: 0 0% 100%;   /* #ffffff */
+  --destructive: 0 84% 60%;         /* #ef4444 */
+  --destructive-foreground: 0 0% 100%; /* #ffffff */
+  --border: 0 0% 10%;               /* #1a1a1a */
+  --input: 0 0% 4%;                 /* #0a0a0a */
+  --ring: 0 0% 20%;                 /* #333333 */
+  --chart-1: 251 91% 69%;
+  --chart-2: 142 76% 45%;
+  --chart-3: 48 96% 56%;
+  --chart-4: 0 84% 60%;
+  --chart-5: 197 92% 43%;
+  --sidebar: 0 0% 7%;               /* #111111 */
+  --sidebar-foreground: 0 0% 100%;  /* #ffffff */
+  --sidebar-primary: 0 0% 100%;     /* #ffffff */
+  --sidebar-primary-foreground: 0 0% 0%; /* #000000 */
+  --sidebar-accent: 0 0% 10%;       /* #1a1a1a */
+  --sidebar-accent-foreground: 0 0% 100%; /* #ffffff */
+  --sidebar-border: 0 0% 10%;       /* #1a1a1a */
+  --sidebar-ring: 0 0% 20%;         /* #333333 */
+  --radius: 0.75rem;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.6;
+}
+
+/* Responsive container system */
+.container-responsive {
+  width: 100%;
+  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+  background-color: hsl(var(--background));
+}
+
+/* Mobile-first: max width 428px */
+@media (max-width: 640px) {
+  .container-responsive {
+    max-width: 428px;
+  }
+}
+
+/* Tablet and up: use more space but maintain center layout */
+@media (min-width: 641px) {
+  .container-responsive {
+    max-width: 1200px;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+/* Large desktop: even more max width */
+@media (min-width: 1024px) {
+  .container-responsive {
+    max-width: 1400px;
+  }
+}
+
+/* Legacy mobile container for backward compatibility */
+.container-mobile {
+  width: 100%;
+  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+  background-color: hsl(var(--background));
+}
+
+@media (max-width: 640px) {
+  .container-mobile {
+    max-width: 428px;
+  }
+}
+
+@media (min-width: 641px) {
+  .container-mobile {
+    max-width: 1200px;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-mobile {
+    max-width: 1400px;
+  }
+}
+
+/* Animation keyframes */
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(10px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Canvas styling */
+.preview-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
