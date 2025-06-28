@@ -7,22 +7,12 @@ import { Copy } from "lucide-react";
 import { Toolbar } from "@/components/toolbar";
 import { DropCard } from "@/components/drop-card";
 import { MainContainer } from "@/components/main-container";
-
+import { useActiveWallet } from "thirdweb/react";
 export default function ArtistPage() {
   const [copiedAddress, setCopiedAddress] = useState(false);
+  const activeWallet = useActiveWallet();
+  const address = activeWallet?.getAccount()?.address;
 
-  const artistData = {
-    name: "FromFriends™",
-    address: "tz1gjaF81ZRRvdzjobyfVNsAeSC6PSc3JAJG",
-    shortAddress: "tz1gja...JAJG",
-    bio: "Creative developer focused on building innovative platforms that empower artists and creators in the Web3 ecosystem through thoughtful design and technology.",
-    stats: {
-      drops: 2,
-      collected: "1.2K",
-      followers: "890",
-      following: "123"
-    }
-  };
 
   const drops = [
     {
@@ -74,7 +64,7 @@ export default function ArtistPage() {
 
   const copyAddress = async () => {
     try {
-      await navigator.clipboard.writeText(artistData.address);
+      await navigator.clipboard.writeText(address || "");
       setCopiedAddress(true);
       setTimeout(() => setCopiedAddress(false), 2000);
     } catch (err) {
@@ -84,7 +74,7 @@ export default function ArtistPage() {
 
   return (
     <MainContainer>
-      <Toolbar title="FromFriends™" showBackButton={true} isWalletConnected={true} />
+      <Toolbar title="NO_NAME" showBackButton={true} isWalletConnected={true} />
 
       <div className="animate-fade-in">
         {/* Desktop Layout */}
@@ -93,10 +83,10 @@ export default function ArtistPage() {
           <div className="lg:col-span-4">
             <div className="text-center lg:text-left py-8 px-5 lg:px-0 border-b lg:border-b-0 border-border">
               <div className="w-20 h-20 lg:w-32 lg:h-32 rounded-full bg-muted border mx-auto lg:mx-0 mb-4 lg:mb-6" />
-              <h1 className="text-2xl lg:text-3xl font-bold mb-2">{artistData.name}</h1>
+              <h1 className="text-2xl lg:text-3xl font-bold mb-2">NO_NAME</h1>
               
               <div className="inline-flex items-center bg-secondary text-muted-foreground px-3 py-2 rounded-lg text-sm font-mono mb-4 lg:mb-6">
-                <span>{artistData.shortAddress}</span>
+                <span>{address?.slice(0, 6)}...{address?.slice(-4)}</span>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -108,32 +98,23 @@ export default function ArtistPage() {
               </div>
 
               <p className="text-muted-foreground text-sm lg:text-base mb-6 lg:mb-8 leading-relaxed">
-                {artistData.bio}
+                NO_BIO
               </p>
 
               {/* Stats - Grid layout on desktop */}
               <div className="grid grid-cols-2 lg:grid-cols-2 gap-4 lg:gap-6">
                 <div className="text-center lg:text-left">
-                  <div className="text-xl lg:text-2xl font-bold">{artistData.stats.drops}</div>
+                  <div className="text-xl lg:text-2xl font-bold">0</div>
                   <div className="text-muted-foreground text-xs lg:text-sm">Drops</div>
                 </div>
                 <div className="text-center lg:text-left">
-                  <div className="text-xl lg:text-2xl font-bold">{artistData.stats.collected}</div>
+                  <div className="text-xl lg:text-2xl font-bold">0</div>
                   <div className="text-muted-foreground text-xs lg:text-sm">Collected</div>
-                </div>
-                <div className="text-center lg:text-left">
-                  <div className="text-xl lg:text-2xl font-bold">{artistData.stats.followers}</div>
-                  <div className="text-muted-foreground text-xs lg:text-sm">Followers</div>
-                </div>
-                <div className="text-center lg:text-left">
-                  <div className="text-xl lg:text-2xl font-bold">{artistData.stats.following}</div>
-                  <div className="text-muted-foreground text-xs lg:text-sm">Following</div>
                 </div>
               </div>
 
               {/* Desktop Action Buttons */}
               <div className="hidden lg:block mt-8 space-y-3">
-                <Button className="w-full">Follow Artist</Button>
                 <Button variant="outline" className="w-full">Share Profile</Button>
               </div>
             </div>
@@ -168,11 +149,6 @@ export default function ArtistPage() {
           </div>
         </div>
 
-        {/* Mobile Action Buttons - Only show on mobile */}
-        <div className="lg:hidden px-5 pb-8 space-y-3">
-          <Button className="w-full">Follow Artist</Button>
-          <Button variant="outline" className="w-full">Share Profile</Button>
-        </div>
       </div>
 
       {copiedAddress && (

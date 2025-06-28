@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,22 +19,23 @@ export default function Home() {
 
   return (
     <>
-            <header className="flex justify-between items-center py-4 lg:py-6 border-b border-border mb-6 lg:mb-12">
+            <header className="flex justify-between items-center py-4 lg:py-6 border-b border-border ">
           <div className="flex items-center w-full justify-between mx-auto px-10 container">
-          <div className="text-2xl lg:text-3xl font-bold">Permalink</div>
+          <div className="text-2xl lg:text-3xl font-bold text-[#47c89f]">Permalink</div>
           <Link href="/main">
             <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
               Demo App
             </Button>
           </Link></div>
         </header>
-    <div className="container-responsive ">
+        <div className="bg-[url('/banner.png')] bg-contain bg-top !bg-no-repeat">
+    <div className="container-responsive  ">
       <div className="animate-fade-in p-5 lg:px-8 min-h-screen">
         {/* Header */}
 
 
         {/* Hero Section */}
-        <section className="text-center py-15 lg:py-20 max-w-4xl mx-auto">
+        <section className=" text-center py-15 lg:py-20 max-w-4xl mx-auto">
           <h1 className="text-5xl lg:text-7xl font-extrabold mb-4 lg:mb-6 tracking-tight">
             Generative Art on Etherlink
           </h1>
@@ -132,9 +134,15 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-6">
             <Card>
               <CardContent className="p-4 lg:p-6 flex items-center">
-                <div className="w-12 h-12 lg:w-16 lg:h-16 rounded-full bg-muted mr-4 lg:mr-6 flex-shrink-0" />
+                <Image
+                  src="/team/bruno-avatar.png"
+                  alt="Bruno Formagio"
+                  width={64}
+                  height={64}
+                  className="w-12 h-12 lg:w-16 lg:h-16 rounded-full mr-4 lg:mr-6 flex-shrink-0 object-cover"
+                />
                 <div>
-                  <div className="font-semibold lg:text-lg">Bruno Formation</div>
+                  <div className="font-semibold lg:text-lg">Bruno Formagio</div>
                   <div className="text-muted-foreground text-sm lg:text-base leading-tight">
                     Digital artist and blockchain developer passionate about merging generative algorithms with decentralized technologies to create new forms of artistic expression.
                   </div>
@@ -144,7 +152,13 @@ export default function Home() {
 
             <Card>
               <CardContent className="p-4 lg:p-6 flex items-center">
-                <div className="w-12 h-12 lg:w-16 lg:h-16 rounded-full bg-muted mr-4 lg:mr-6 flex-shrink-0" />
+                <Image
+                  src="/team/ff-avatar.jpg"
+                  alt="FromFriends™"
+                  width={64}
+                  height={64}
+                  className="w-12 h-12 lg:w-16 lg:h-16 rounded-full mr-4 lg:mr-6 flex-shrink-0 object-cover"
+                />
                 <div>
                   <div className="font-semibold lg:text-lg">FromFriends™</div>
                   <div className="text-muted-foreground text-sm lg:text-base leading-tight">
@@ -156,6 +170,6 @@ export default function Home() {
           </div>
         </section>
       </div>
-    </div></>
+    </div></div></>
   );
 }

@@ -43,7 +43,7 @@ export function Toolbar({
         )}
       </div>
 
-      <h1 className="text-xl lg:text-2xl font-bold absolute left-1/2 transform -translate-x-1/2">
+      <h1 className="text-xl text-[#47c89f] lg:text-2xl font-bold absolute left-1/2 transform -translate-x-1/2">
         {title}
       </h1>
 

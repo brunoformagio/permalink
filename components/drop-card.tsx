@@ -20,7 +20,7 @@ export function DropCard({ drop }: DropCardProps) {
   return (
     <Card className="overflow-hidden transition-transform hover:-translate-y-1">
       <Link href="/item">
-        <div className="w-full h-48 bg-muted flex items-center justify-center text-muted-foreground cursor-pointer">
+        <div className="w-full h-48 bg-[#222] text-[#666] flex items-center justify-center text-muted-foreground cursor-pointer">
           {drop.image}
         </div>
       </Link>

@@ -70,7 +70,6 @@ body {
   margin: 0 auto;
   min-height: 100vh;
   position: relative;
-  background-color: hsl(var(--background));
 }
 
 /* Mobile-first: max width 428px */
