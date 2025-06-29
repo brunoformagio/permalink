@@ -18,9 +18,9 @@ import {
   type Artwork 
 } from "@/lib/contract";
 
-function MainPageContent() {
+// This is a client component that doesn't use useSearchParams directly
+function MainPageContent({ searchParamsValue }: { searchParamsValue: string | null }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const activeWallet = useActiveWallet();
   const isWalletConnected = !!activeWallet;
 
@@ -77,8 +77,7 @@ function MainPageContent() {
 
   // Handle refresh parameter from URL (e.g. when redirected from minting)
   useEffect(() => {
-    const shouldRefresh = searchParams.get('refresh');
-    if (shouldRefresh === 'true') {
+    if (searchParamsValue === 'true') {
       toast.loading("Refreshing artwork gallery...", {
         id: "auto-refresh"
       });
@@ -97,7 +96,7 @@ function MainPageContent() {
         router.replace(newUrl.pathname, { scroll: false });
       }, 1000); // Small delay to let the page load
     }
-  }, [searchParams, router]);
+  }, [searchParamsValue, router]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -340,6 +339,10 @@ function MainPageContent() {
 }
 
 export default function MainPage() {
+  // Use the hook at this level, within the Suspense boundary
+  const searchParams = useSearchParams();
+  const refreshParam = searchParams.get('refresh');
+  
   return (
     <Suspense fallback={
       <MainContainer>
@@ -351,7 +354,7 @@ export default function MainPage() {
         </div>
       </MainContainer>
     }>
-      <MainPageContent />
+      <MainPageContent searchParamsValue={refreshParam} />
     </Suspense>
   );
 }
