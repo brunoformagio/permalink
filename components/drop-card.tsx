@@ -9,7 +9,8 @@ interface Drop {
   title: string;
   artist: string;
   price: string;
-  image: string;
+  image: string; // Can be text description or actual image URI
+  imageUri?: string; // Actual image URI for display
   supply?: string; // Optional supply information
 }
 
@@ -29,14 +30,36 @@ export function DropCard({ drop, onClick }: DropCardProps) {
     <Card className="overflow-hidden transition-transform hover:-translate-y-1">
       {onClick ? (
         <div onClick={handleCardClick}>
-          <div className="w-full h-48 bg-[#222] text-[#666] flex items-center justify-center text-muted-foreground cursor-pointer">
-            {drop.image}
+          <div className="w-full h-48 bg-muted flex items-center justify-center text-muted-foreground cursor-pointer overflow-hidden">
+            {drop.imageUri ? (
+              <img 
+                src={drop.imageUri} 
+                alt={drop.title}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="text-center p-4">
+                <div className="text-sm font-medium">{drop.title}</div>
+                <div className="text-xs mt-1 opacity-75">{drop.image}</div>
+              </div>
+            )}
           </div>
         </div>
       ) : (
         <Link href={`/item/${drop.id}`}>
-          <div className="w-full h-48 bg-[#222] text-[#666] flex items-center justify-center text-muted-foreground cursor-pointer">
-            {drop.image}
+          <div className="w-full h-48 bg-muted flex items-center justify-center text-muted-foreground cursor-pointer overflow-hidden">
+            {drop.imageUri ? (
+              <img 
+                src={drop.imageUri} 
+                alt={drop.title}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="text-center p-4">
+                <div className="text-sm font-medium">{drop.title}</div>
+                <div className="text-xs mt-1 opacity-75">{drop.image}</div>
+              </div>
+            )}
           </div>
         </Link>
       )}

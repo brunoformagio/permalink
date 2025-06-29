@@ -867,7 +867,7 @@ export interface Permalink extends BaseContract {
     "nonpayable"
   >;
 
-  uri: TypedContractMethod<[arg0: BigNumberish], [string], "view">;
+  uri: TypedContractMethod<[tokenId: BigNumberish], [string], "view">;
 
   withdrawPlatformFees: TypedContractMethod<[], [void], "nonpayable">;
 
@@ -1141,7 +1141,7 @@ export interface Permalink extends BaseContract {
   >;
   getFunction(
     nameOrSignature: "uri"
-  ): TypedContractMethod<[arg0: BigNumberish], [string], "view">;
+  ): TypedContractMethod<[tokenId: BigNumberish], [string], "view">;
   getFunction(
     nameOrSignature: "withdrawPlatformFees"
   ): TypedContractMethod<[], [void], "nonpayable">;

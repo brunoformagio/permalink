@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ import {
   type Artwork 
 } from "@/lib/contract";
 
-export default function MainPage() {
+function MainPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const activeWallet = useActiveWallet();
@@ -182,6 +182,7 @@ export default function MainPage() {
                     artist: `${featuredArtwork.artist.slice(0, 6)}...${featuredArtwork.artist.slice(-4)}`,
                     price: `${featuredArtwork.price} XTZ`,
                     image: featuredArtwork.description || `Artwork #${featuredArtwork.tokenId}`,
+                    imageUri: featuredArtwork.imageUri,
                     supply: `${featuredArtwork.currentSupply}/${featuredArtwork.maxSupply} minted`
                   }}
                   onClick={() => navigateToItem(featuredArtwork.tokenId)}
@@ -203,6 +204,7 @@ export default function MainPage() {
                          artist: `${artwork.artist.slice(0, 6)}...${artwork.artist.slice(-4)}`,
                          price: `${artwork.price} XTZ`,
                          image: artwork.description || `Artwork #${artwork.tokenId}`,
+                         imageUri: artwork.imageUri,
                          supply: `${artwork.currentSupply}/${artwork.maxSupply} minted`
                        }}
                        onClick={() => navigateToItem(artwork.tokenId)}
@@ -335,4 +337,21 @@ export default function MainPage() {
       </div>
     </MainContainer>
   );
-} 
+}
+
+export default function MainPage() {
+  return (
+    <Suspense fallback={
+      <MainContainer>
+        <div className="animate-fade-in flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+      </MainContainer>
+    }>
+      <MainPageContent />
+    </Suspense>
+  );
+}

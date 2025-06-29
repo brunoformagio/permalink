@@ -8,11 +8,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { Upload, CheckCircle, Image, FileText, DollarSign, Hash, Wallet } from "lucide-react";
+import { Upload, Image, FileText, DollarSign, Hash, Wallet } from "lucide-react";
 import { Toolbar } from "@/components/toolbar";
 import { MainContainer } from "@/components/main-container";
 import { toast } from "sonner";
 import { mintArtworkV5, getAccountFromWallet } from "@/lib/contract";
+import {
+  fileToBase64,
+  validateImageFile,
+  compressImage,
+  createNFTMetadata,
+  createDataURI,
+  metadataToJSON
+} from "@/lib/metadata";
 
 export default function CreatePage() {
   const router = useRouter();
@@ -26,6 +34,8 @@ export default function CreatePage() {
     editions: "1"
   });
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [imageBase64, setImageBase64] = useState<string | null>(null);
+  const [imageProcessing, setImageProcessing] = useState(false);
   const [minting, setMinting] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -36,15 +46,48 @@ export default function CreatePage() {
     }));
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      // Validate file size (24MB max)
-      if (file.size > 24 * 1024 * 1024) {
-        toast.error("File size must be less than 24MB");
-        return;
+    if (!file) return;
+
+    // Validate image file
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      toast.error(validation.error);
+      return;
+    }
+
+    try {
+      setImageProcessing(true);
+      toast.loading("Processing image for on-chain storage...", { id: "image-processing" });
+
+      // Compress image if needed for on-chain storage
+      let processedFile = file;
+      if (file.size > 5 * 1024 * 1024) { // If larger than 5MB, compress
+        toast.loading("Compressing image for optimal on-chain storage...", { id: "image-processing" });
+        processedFile = await compressImage(file, 5000); // 5MB max
       }
-      setUploadedFile(file);
+
+      // Convert to base64
+      toast.loading("Converting image to base64...", { id: "image-processing" });
+      const base64Image = await fileToBase64(processedFile);
+      
+      // Update state
+      setUploadedFile(processedFile);
+      setImageBase64(base64Image);
+      
+      toast.success(
+        `Image processed successfully! (${(processedFile.size / 1024 / 1024).toFixed(2)} MB)`,
+        { id: "image-processing" }
+      );
+
+    } catch (error) {
+      console.error("Error processing image:", error);
+      toast.error("Failed to process image. Please try again.", { id: "image-processing" });
+      setUploadedFile(null);
+      setImageBase64(null);
+    } finally {
+      setImageProcessing(false);
     }
   };
 
@@ -56,7 +99,7 @@ export default function CreatePage() {
       return;
     }
 
-    if (!uploadedFile) {
+    if (!uploadedFile || !imageBase64) {
       toast.error("Please upload an artwork file");
       return;
     }
@@ -86,22 +129,46 @@ export default function CreatePage() {
         return;
       }
       
-      // For now, we'll use a placeholder metadata URI
-      // In a production app, you'd upload the file to IPFS first
-      const metadataURI = `ipfs://placeholder-metadata-${Date.now()}-${uploadedFile.name}`;
+      // Show metadata creation progress
+      toast.loading("Creating NFT metadata...", { id: "minting-progress" });
+      
+      // Generate a temporary token ID (this will be replaced by actual ID from contract)
+      const tempTokenId = Date.now();
+      
+      // Create standard NFT metadata with on-chain image
+      const metadata = createNFTMetadata(
+        tempTokenId,
+        formData.title,
+        formData.description,
+        imageBase64,
+        currentUserAddress,
+        formData.price,
+        parseInt(formData.editions)
+      );
+      
+      // Convert metadata to JSON string for on-chain storage
+      const metadataJSON = metadataToJSON(metadata);
+      
+      // Create data URI for metadata (this will be stored on-chain)
+      const metadataURI = createDataURI(metadataJSON);
+      
+      console.log("Metadata size:", (metadataJSON.length / 1024).toFixed(2), "KB");
+      
+      // Show minting progress
+      toast.loading("Minting NFT with on-chain metadata...", { id: "minting-progress" });
       
       // Call the real contract function
       const result = await mintArtworkV5(
         account,
         formData.title,
         formData.description,
-        metadataURI,
+        metadataURI, // This now contains the full metadata with base64 image
         formData.price,
         parseInt(formData.editions)
       );
 
       if (result.success) {
-        toast.success("Artwork minted successfully!");
+        toast.success("Artwork minted successfully with on-chain metadata!", { id: "minting-progress" });
         
         // Show transaction hash
         if (result.txHash) {
@@ -138,12 +205,12 @@ export default function CreatePage() {
         }, 3000);
         
       } else {
-        toast.error(result.error || "Failed to mint artwork");
+        toast.error(result.error || "Failed to mint artwork", { id: "minting-progress" });
       }
       
     } catch (error) {
       console.error("Minting error:", error);
-      toast.error("Failed to mint artwork. Please try again.");
+      toast.error("Failed to mint artwork. Please try again.", { id: "minting-progress" });
     } finally {
       setMinting(false);
     }
@@ -155,6 +222,8 @@ export default function CreatePage() {
                      formData.editions && 
                      parseInt(formData.editions) > 0 &&
                      uploadedFile &&
+                     imageBase64 &&
+                     !imageProcessing &&
                      currentUserAddress;
 
   return (
@@ -210,16 +279,30 @@ export default function CreatePage() {
                           id="file-upload"
                           type="file"
                           className="hidden"
-                          accept="image/*,.zip"
+                          accept="image/*"
                           onChange={handleFileUpload}
                           disabled={minting}
                         />
-                        {uploadedFile ? (
+                        {imageProcessing ? (
                           <div className="space-y-3">
-                            <CheckCircle className="h-12 w-12 lg:h-16 lg:w-16 text-green-500 mx-auto" />
+                            <div className="animate-spin rounded-full h-12 w-12 lg:h-16 lg:w-16 border-b-2 border-primary mx-auto" />
+                            <div className="font-medium lg:text-lg">Processing image...</div>
+                            <div className="text-muted-foreground text-sm lg:text-base">
+                              Converting to on-chain format
+                            </div>
+                          </div>
+                        ) : uploadedFile && imageBase64 ? (
+                          <div className="space-y-3">
+                            <div className="w-24 h-24 lg:w-32 lg:h-32 mx-auto rounded-lg overflow-hidden border">
+                              <img 
+                                src={imageBase64} 
+                                alt="Uploaded artwork"
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
                             <div className="font-medium lg:text-lg">{uploadedFile.name}</div>
                             <div className="text-green-500 text-sm lg:text-base">
-                              File uploaded successfully ({(uploadedFile.size / 1024 / 1024).toFixed(2)} MB)
+                              Ready for on-chain minting ({(uploadedFile.size / 1024 / 1024).toFixed(2)} MB)
                             </div>
                           </div>
                         ) : (
@@ -227,7 +310,7 @@ export default function CreatePage() {
                             <Upload className="h-12 w-12 lg:h-16 lg:w-16 text-muted-foreground mx-auto" />
                             <div className="font-medium lg:text-lg">Click to upload your artwork</div>
                             <div className="text-muted-foreground text-sm lg:text-base">
-                              Images or .zip files up to 24 MB
+                              Images up to 10 MB for on-chain storage
                             </div>
                           </div>
                         )}
@@ -352,12 +435,18 @@ export default function CreatePage() {
               <Card>
                 <CardContent className="p-6">
                   <h3 className="font-semibold mb-4">Preview</h3>
-                  <div className="aspect-square bg-muted rounded-lg flex items-center justify-center mb-4">
-                    {uploadedFile ? (
+                  <div className="aspect-square bg-muted rounded-lg flex items-center justify-center mb-4 overflow-hidden">
+                    {imageProcessing ? (
                       <div className="text-center">
-                        <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-2" />
-                        <div className="text-sm font-medium">Ready to mint</div>
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2" />
+                        <div className="text-sm font-medium">Processing...</div>
                       </div>
+                    ) : imageBase64 ? (
+                      <img 
+                        src={imageBase64} 
+                        alt="Artwork preview"
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
                       <div className="text-center text-muted-foreground">
                         <Image className="h-12 w-12 mx-auto mb-2" />
@@ -422,11 +511,12 @@ export default function CreatePage() {
                 <CardContent className="p-6">
                   <h3 className="font-semibold mb-4">Tips for Success</h3>
                   <ul className="space-y-2 text-sm text-muted-foreground">
-                    <li>• Use high-quality images (min 1000x1000px)</li>
+                    <li>• Use high-quality images (up to 10MB for on-chain storage)</li>
+                    <li>• Optimize image size - larger files = higher gas costs</li>
                     <li>• Write detailed, engaging descriptions</li>
                     <li>• Research comparable artwork prices</li>
                     <li>• Consider limited editions for scarcity</li>
-                    <li>• Engage with the community on social media</li>
+                    <li>• Images are stored permanently on-chain</li>
                   </ul>
                 </CardContent>
               </Card>
@@ -446,7 +536,7 @@ export default function CreatePage() {
                       </span>
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      All NFTs are minted on-chain with permanent ownership records.
+                      All NFTs and images are stored permanently on-chain with immutable metadata.
                     </div>
                   </div>
                 </CardContent>

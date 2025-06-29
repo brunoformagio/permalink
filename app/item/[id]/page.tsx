@@ -10,11 +10,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Heart, Share, ShoppingCart, User, Calendar } from "lucide-react";
+import { Heart, Share, ShoppingCart, User, Calendar, Loader2 } from "lucide-react";
 import { 
   getArtwork, 
   getArtistProfile,
   getUserTokenBalance,
+  purchaseArtworkV5,
+  getAccountFromWallet,
   formatAddress,
   formatDate,
   type Artwork,
@@ -33,7 +35,7 @@ export default function DynamicItemPage() {
   const [artistProfile, setArtistProfile] = useState<ArtistProfile | null>(null);
   const [userBalance, setUserBalance] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [purchasing] = useState(false);
+  const [purchasing, setPurchasing] = useState(false);
   const [purchaseAmount, setPurchaseAmount] = useState("1");
   const [error, setError] = useState<string | null>(null);
 
@@ -80,16 +82,119 @@ export default function DynamicItemPage() {
   }, [tokenId, currentUserAddress]);
 
   const handlePurchase = async () => {
-    if (!activeWallet || !artwork) return;
-
-    const amount = parseInt(purchaseAmount);
-    if (amount <= 0 || amount > (artwork.maxSupply - artwork.currentSupply)) {
-      toast.error("Invalid purchase amount");
+    if (!activeWallet || !artwork) {
+      toast.error("Please connect your wallet first");
       return;
     }
 
-    // TODO: Implement purchase with thirdweb v5
-    toast.error("Purchase functionality will be available soon. Contract integration in progress.");
+    const amount = parseInt(purchaseAmount);
+    const availableForPurchase = artwork.maxSupply - artwork.currentSupply;
+    
+    // Validation
+    if (isNaN(amount) || amount <= 0) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+    
+    if (amount > availableForPurchase) {
+      toast.error(`Only ${availableForPurchase} edition${availableForPurchase > 1 ? 's' : ''} available`);
+      return;
+    }
+
+    const totalPrice = (parseFloat(artwork.price) * amount).toFixed(4);
+    
+    try {
+      setPurchasing(true);
+      
+      // Get account from wallet
+      const account = getAccountFromWallet(activeWallet);
+      if (!account) {
+        toast.error("Unable to get account from wallet");
+        return;
+      }
+
+      // Show purchasing notification
+      toast.loading(`Purchasing ${amount} edition${amount > 1 ? 's' : ''} for ${totalPrice} XTZ...`, {
+        id: "purchase-tx"
+      });
+
+      // Execute purchase
+      const result = await purchaseArtworkV5(account, tokenId, amount, totalPrice);
+
+      if (result.success) {
+        toast.success(
+          `Successfully purchased ${amount} edition${amount > 1 ? 's' : ''}!`,
+          { id: "purchase-tx" }
+        );
+
+        // Show transaction hash
+        if (result.txHash) {
+          console.log("Purchase transaction hash:", result.txHash);
+          
+          toast.success(
+            `Purchase confirmed! Hash: ${result.txHash.slice(0, 10)}...`,
+            {
+              action: {
+                label: "View on Explorer",
+                onClick: () => window.open(
+                  `https://testnet.explorer.etherlink.com/tx/${result.txHash}`,
+                  '_blank'
+                )
+              },
+              duration: 15000,
+            }
+          );
+        }
+
+        // Show refreshing notification
+        toast.loading("Updating artwork data...", {
+          id: "purchase-refresh"
+        });
+
+        // Refresh data after successful purchase
+        setTimeout(async () => {
+          try {
+            // Refetch artwork data
+            const updatedArtwork = await getArtwork(tokenId);
+            if (updatedArtwork) {
+              setArtwork(updatedArtwork);
+            }
+
+            // Refetch user balance
+            if (currentUserAddress) {
+              const updatedBalance = await getUserTokenBalance(currentUserAddress, tokenId);
+              setUserBalance(updatedBalance);
+            }
+
+            toast.success("Artwork data updated!", {
+              id: "purchase-refresh"
+            });
+
+            // Reset purchase amount to 1
+            setPurchaseAmount("1");
+
+          } catch (refreshError) {
+            console.error("Error refreshing data:", refreshError);
+            toast.error("Purchase successful, but failed to refresh data. Please reload the page.", {
+              id: "purchase-refresh"
+            });
+          }
+        }, 3000); // Wait for blockchain confirmation
+
+      } else {
+        toast.error(result.error || "Purchase failed", {
+          id: "purchase-tx"
+        });
+      }
+
+    } catch (error) {
+      console.error("Purchase error:", error);
+      toast.error("An unexpected error occurred during purchase", {
+        id: "purchase-tx"
+      });
+    } finally {
+      setPurchasing(false);
+    }
   };
 
   const isOwner = currentUserAddress?.toLowerCase() === artwork?.artist.toLowerCase();
@@ -142,15 +247,21 @@ export default function DynamicItemPage() {
             <Card className="mb-6 lg:mb-0">
               <CardContent className="p-0">
                 {/* Artwork Preview */}
-                <div className="aspect-square bg-muted flex items-center justify-center text-muted-foreground">
-                  {artwork.metadataURI ? (
+                <div className="aspect-square bg-muted flex items-center justify-center text-muted-foreground overflow-hidden">
+                  {artwork.imageUri ? (
+                    <img 
+                      src={artwork.imageUri} 
+                      alt={artwork.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : artwork.metadataURI ? (
                     <div className="text-center p-8">
                       <div className="text-lg font-semibold mb-2">{artwork.title}</div>
                       <div className="text-sm opacity-75">Token ID: {artwork.tokenId}</div>
                       <div className="text-xs mt-4">Generative Art NFT</div>
                     </div>
                   ) : (
-                    <div className="text-center">
+                    <div className="text-center p-8">
                       <div className="text-lg font-semibold mb-2">{artwork.title}</div>
                       <div className="text-sm">No preview available</div>
                     </div>
@@ -277,10 +388,27 @@ export default function DynamicItemPage() {
                           max={availableSupply}
                           value={purchaseAmount}
                           onChange={(e) => setPurchaseAmount(e.target.value)}
-                          className="mt-1"
+                          className={`mt-1 ${
+                            parseInt(purchaseAmount || "0") > availableSupply || parseInt(purchaseAmount || "0") <= 0
+                              ? "border-destructive focus:ring-destructive" 
+                              : ""
+                          }`}
+                          disabled={purchasing}
                         />
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {availableSupply} available
+                        <div className="text-xs mt-1">
+                          {parseInt(purchaseAmount || "0") > availableSupply ? (
+                            <span className="text-destructive">
+                              Maximum {availableSupply} available
+                            </span>
+                          ) : parseInt(purchaseAmount || "0") <= 0 ? (
+                            <span className="text-destructive">
+                              Amount must be at least 1
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">
+                              {availableSupply} available
+                            </span>
+                          )}
                         </div>
                       </div>
 
@@ -295,10 +423,11 @@ export default function DynamicItemPage() {
                         className="w-full" 
                         size="lg"
                         onClick={handlePurchase}
-                        disabled={purchasing || !currentUserAddress}
+                        disabled={purchasing || !currentUserAddress || parseInt(purchaseAmount || "0") <= 0 || parseInt(purchaseAmount || "0") > availableSupply}
                       >
-                        <ShoppingCart className="h-4 w-4 mr-2" />
-                        {purchasing ? "Purchasing..." : "Purchase"}
+                        {!purchasing && <ShoppingCart className={'h-4 w-4 mr-2'} />}
+                        {purchasing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                        {purchasing ? "Processing..." : `Purchase for ${totalPrice} XTZ`}
                       </Button>
                       
                       {!currentUserAddress && (
@@ -347,6 +476,32 @@ export default function DynamicItemPage() {
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Created</span>
                       <span>{formatDate(artwork.createdAt)}</span>
+                    </div>
+                    
+                    {/* Additional metadata attributes */}
+                    {artwork.metadata?.attributes && (
+                      <>
+                        <div className="border-t pt-3">
+                          <h4 className="font-medium mb-3 text-sm">Metadata Attributes</h4>
+                          <div className="space-y-2">
+                            {artwork.metadata.attributes.slice(0, 6).map((attr, index) => (
+                              <div key={index} className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">{attr.trait_type}</span>
+                                <span className="font-medium">{attr.value}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                    
+                    <div className="border-t pt-3">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Storage Type</span>
+                        <span className="font-medium">
+                          {artwork.metadata ? "On-chain" : "External"}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </CardContent>

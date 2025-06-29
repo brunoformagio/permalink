@@ -366,6 +366,23 @@ contract Permalink is ERC1155, ERC1155Supply, Ownable, ReentrancyGuard, Pausable
     }
     
     /**
+     * @dev Override URI function to return per-token metadata
+     * This is critical for MetaMask and other wallets to display NFT metadata
+     */
+    function uri(uint256 tokenId) public view virtual override returns (string memory) {
+        // Check if token exists and has metadata
+        if (tokenId <= _currentTokenId && tokenId > 0) {
+            Artwork memory artwork = artworks[tokenId];
+            if (bytes(artwork.metadataURI).length > 0) {
+                return artwork.metadataURI;
+            }
+        }
+        
+        // Fall back to base URI if no specific metadata found
+        return super.uri(tokenId);
+    }
+    
+    /**
      * @dev Check if contract supports interface
      */
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155) returns (bool) {

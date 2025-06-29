@@ -2,6 +2,7 @@ import { ethers } from "ethers";
 import { createThirdwebClient, getContract as getThirdwebContract, prepareContractCall, sendTransaction } from "thirdweb";
 import { defineChain } from "thirdweb/chains";
 import type { Account, Wallet } from "thirdweb/wallets";
+import { extractFromDataURI, parseMetadata, getImageFromMetadata } from "./metadata";
 
 // Import the compiled ABI for accurate function signatures
 import PermalinkABI from "../artifacts/contracts/Permalink.sol/Permalink.json";
@@ -70,6 +71,8 @@ export interface Artwork {
   title: string;
   description: string;
   metadataURI: string;
+  metadata?: import('@/lib/metadata').NFTMetadata; // Parsed metadata
+  imageUri?: string; // Extracted image for display
   price: string; // in ETH
   maxSupply: number;
   currentSupply: number;
@@ -144,12 +147,32 @@ export async function getArtwork(tokenId: number): Promise<Artwork | null> {
     const contract = getContract();
     const result = await contract.getArtwork(tokenId);
     
+    // Parse metadata if it's a data URI (on-chain metadata)
+    let metadata: import('@/lib/metadata').NFTMetadata | undefined;
+    let imageUri: string | undefined;
+    
+    if (result.metadataURI) {
+      if (result.metadataURI.startsWith('data:application/json;base64,')) {
+        // On-chain metadata
+        const metadataJSON = extractFromDataURI(result.metadataURI);
+        if (metadataJSON) {
+          metadata = parseMetadata(metadataJSON) || undefined;
+          imageUri = metadata?.image;
+        }
+      } else {
+        // Legacy metadata - try to extract image
+        imageUri = getImageFromMetadata(result.metadataURI) || undefined;
+      }
+    }
+    
     return {
       tokenId,
       artist: result.artist,
       title: result.title,
       description: result.description,
       metadataURI: result.metadataURI,
+      metadata,
+      imageUri,
       price: ethers.formatEther(result.price),
       maxSupply: Number(result.maxSupply),
       currentSupply: Number(result.currentSupply),

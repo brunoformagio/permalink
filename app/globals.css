@@ -146,3 +146,168 @@ body {
   height: 100%;
   display: block;
 }
+
+/* Sonner toast styling */
+:where(.toaster) {
+  --width: 356px;
+  --border-radius: calc(var(--radius) - 2px);
+  --toast-bg: hsl(var(--card));
+  --toast-border: hsl(var(--border));
+  --toast-text: hsl(var(--card-foreground));
+}
+
+:where([data-sonner-toaster]) {
+  position: fixed;
+  width: var(--width);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, Noto Sans, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
+  --gray1: hsl(var(--muted));
+  --gray2: hsl(var(--muted-foreground));
+  --gray3: hsl(var(--muted));
+  --gray4: hsl(var(--border));
+  --gray5: hsl(var(--border));
+  --gray6: hsl(var(--border));
+  --gray7: hsl(var(--border));
+  --gray8: hsl(var(--border));
+  --gray9: hsl(var(--muted-foreground));
+  --gray10: hsl(var(--muted-foreground));
+  --gray11: hsl(var(--foreground));
+  --gray12: hsl(var(--foreground));
+  --border-radius: var(--radius);
+}
+
+:where([data-sonner-toast]) {
+  --y: translateY(100%);
+  --lift-amount: calc(var(--lift) * 1px);
+  --window-width: 100vw;
+  --width: var(--width);
+  --window-height: 100vh;
+  --toast-width: 100%;
+  --gap: 4px;
+  --front-z-index: 1000;
+  --normal-bg: var(--toast-bg);
+  --normal-border: var(--toast-border);
+  --normal-text: var(--toast-text);
+  --success-bg: hsl(var(--card));
+  --success-border: hsl(152 69% 52%);
+  --success-text: hsl(152 69% 52%);
+  --info-bg: hsl(var(--card));
+  --info-border: hsl(var(--border));
+  --info-text: hsl(var(--card-foreground));
+  --warning-bg: hsl(var(--card));
+  --warning-border: hsl(48 96% 56%);
+  --warning-text: hsl(48 96% 56%);
+  --error-bg: hsl(var(--card));
+  --error-border: hsl(var(--destructive));
+  --error-text: hsl(var(--destructive));
+  --border-radius: var(--radius);
+  --box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --background: var(--normal-bg);
+  --border: var(--normal-border);
+  --color: var(--normal-text);
+}
+
+:where([data-sonner-toast][data-styled=true]) {
+  padding: 16px;
+  background: var(--background);
+  border: 1px solid var(--border);
+  color: var(--color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+:where([data-sonner-toast]:focus-visible) {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05), 0 0 0 2px hsl(var(--ring));
+}
+
+:where([data-sonner-toast][data-type=success]) {
+  --background: var(--success-bg);
+  --border: var(--success-border);
+  --color: var(--success-text);
+}
+
+:where([data-sonner-toast][data-type=info]) {
+  --background: var(--info-bg);
+  --border: var(--info-border);
+  --color: var(--info-text);
+}
+
+:where([data-sonner-toast][data-type=warning]) {
+  --background: var(--warning-bg);
+  --border: var(--warning-border);
+  --color: var(--warning-text);
+}
+
+:where([data-sonner-toast][data-type=error]) {
+  --background: var(--error-bg);
+  --border: var(--error-border);
+  --color: var(--error-text);
+}
+
+:where([data-sonner-toast][data-type=loading]) {
+  --background: var(--normal-bg);
+  --border: var(--normal-border);
+  --color: var(--normal-text);
+}
+
+:where([data-sonner-toast-description]) {
+  color: hsl(var(--muted-foreground));
+  line-height: 1.4;
+  flex: 1;
+}
+
+:where([data-sonner-button]) {
+  border-radius: calc(var(--border-radius) - 4px);
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border: none;
+  cursor: pointer;
+  outline: none;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+:where([data-sonner-button]:focus-visible) {
+  box-shadow: 0 0 0 2px hsl(var(--ring));
+}
+
+:where([data-sonner-button]:first-of-type) {
+  margin-left: auto;
+}
+
+:where([data-sonner-cancel]) {
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+}
+
+:where([data-sonner-close-button]) {
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  height: 20px;
+  width: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  background: hsl(var(--card));
+  color: hsl(var(--muted-foreground));
+  border: none;
+  cursor: pointer;
+  outline: none;
+  border-radius: var(--border-radius);
+  font-size: 12px;
+  transition: all 0.15s ease;
+}
+
+:where([data-sonner-close-button]:focus-visible) {
+  box-shadow: 0 0 0 2px hsl(var(--ring));
+}
