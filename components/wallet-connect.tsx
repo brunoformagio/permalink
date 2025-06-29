@@ -27,7 +27,7 @@ export function WalletConnect({
   triggerText = "Connect Wallet",
   showCard = false 
 }: WalletConnectProps) {
-  const { connect, isConnecting, error } = useConnect();
+  const { connect, isConnecting } = useConnect();
   const activeWallet = useActiveWallet();
   const { disconnect } = useDisconnect();
   const [isOpen, setIsOpen] = useState(false);

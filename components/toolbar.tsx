@@ -21,8 +21,7 @@ interface ToolbarProps {
 
 export function Toolbar({ 
   title, 
-  showBackButton = false, 
-  isWalletConnected: legacyProp // Ignore this, we'll use thirdweb state
+  showBackButton = false 
 }: ToolbarProps) {
   const activeWallet = useActiveWallet();
   const isWalletConnected = !!activeWallet;

@@ -1,0 +1,10 @@
+{
+  "contractAddress": "0xD5a08c2dF3bDafb0313ABbF1213771D62273bf6a",
+  "deployerAddress": "0xa2d2d9398d43a28400238662AbA4B96Fc03Dcd22",
+  "network": "etherlinkTestnet",
+  "deploymentTxHash": "0xe0c730a26e5a786dd2a57671c2365a890f6f6e2f76d2a49477a99e366a81fa68",
+  "deploymentTime": "2025-06-29T13:15:13.015Z",
+  "chainId": "128123",
+  "contractName": "Permalink",
+  "abi": "See artifacts/contracts/Permalink.sol/Permalink.json"
+}

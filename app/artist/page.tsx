@@ -1,161 +1,90 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Copy } from "lucide-react";
-import { Toolbar } from "@/components/toolbar";
-import { DropCard } from "@/components/drop-card";
-import { MainContainer } from "@/components/main-container";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useActiveWallet } from "thirdweb/react";
-export default function ArtistPage() {
-  const [copiedAddress, setCopiedAddress] = useState(false);
+import { MainContainer } from "@/components/main-container";
+import { Toolbar } from "@/components/toolbar";
+import { Button } from "@/components/ui/button";
+import { WalletConnect } from "@/components/wallet-connect";
+import { User, Wallet } from "lucide-react";
+
+export default function ArtistRedirectPage() {
+  const router = useRouter();
   const activeWallet = useActiveWallet();
-  const address = activeWallet?.getAccount()?.address;
+  const currentUserAddress = activeWallet?.getAccount()?.address;
 
-
-  const drops = [
-    {
-      id: "1",
-      title: "Digital Dreams #001",
-      artist: "Created",
-      price: "2.5 XTZ",
-      image: "Artist Creation #1"
-    },
-    {
-      id: "2",
-      title: "Future Visions",
-      artist: "Created",
-      price: "1.9 XTZ",
-      image: "Artist Creation #2"
-    },
-    {
-      id: "3",
-      title: "Neon Abstracts",
-      artist: "Created",
-      price: "3.1 XTZ",
-      image: "Artist Creation #3"
-    },
-    {
-      id: "4",
-      title: "Generative Flows",
-      artist: "Created",
-      price: "2.2 XTZ",
-      image: "Artist Creation #4"
+  useEffect(() => {
+    // If wallet is connected, redirect to user's artist profile
+    if (currentUserAddress) {
+      router.push(`/artist/${currentUserAddress}`);
     }
-  ];
+  }, [currentUserAddress, router]);
 
-  const collected = [
-    {
-      id: "5",
-      title: "Rare Collection #007",
-      artist: "Collected",
-      price: "",
-      image: "Collected Item #1"
-    },
-    {
-      id: "6",
-      title: "Abstract Essence #12",
-      artist: "Collected",
-      price: "",
-      image: "Collected Item #2"
-    }
-  ];
+  // If wallet is connected, show loading while redirecting
+  if (currentUserAddress) {
+    return (
+      <MainContainer>
+        <Toolbar title="Artist Profile" showBackButton={true} isWalletConnected={true} />
+        <div className="animate-fade-in flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Redirecting to your artist profile...</p>
+          </div>
+        </div>
+      </MainContainer>
+    );
+  }
 
-  const copyAddress = async () => {
-    try {
-      await navigator.clipboard.writeText(address || "");
-      setCopiedAddress(true);
-      setTimeout(() => setCopiedAddress(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy address:', err);
-    }
-  };
-
+  // If no wallet connected, show connect wallet page
   return (
     <MainContainer>
-      <Toolbar title="NO_NAME" showBackButton={true} isWalletConnected={true} />
+      <Toolbar title="Artist Profile" showBackButton={true} isWalletConnected={false} />
+      
+      <div className="animate-fade-in p-5 lg:px-8">
+        <div className="max-w-md mx-auto text-center py-12">
+          <div className="w-20 h-20 mx-auto mb-6 bg-muted rounded-full flex items-center justify-center">
+            <User className="h-10 w-10 text-muted-foreground" />
+          </div>
+          
+          <h1 className="text-2xl font-bold mb-4">Connect Your Wallet</h1>
+          <p className="text-muted-foreground mb-8 leading-relaxed">
+            To view your artist profile, you need to connect your wallet first. 
+            Your profile will be automatically created based on your wallet address.
+          </p>
 
-      <div className="animate-fade-in">
-        {/* Desktop Layout */}
-        <div className="lg:grid lg:grid-cols-12 lg:gap-8 lg:p-8">
-          {/* Artist Header - Spans full width on mobile, left column on desktop */}
-          <div className="lg:col-span-4">
-            <div className="text-center lg:text-left py-8 px-5 lg:px-0 border-b lg:border-b-0 border-border">
-              <div className="w-20 h-20 lg:w-32 lg:h-32 rounded-full bg-muted border mx-auto lg:mx-0 mb-4 lg:mb-6" />
-              <h1 className="text-2xl lg:text-3xl font-bold mb-2">NO_NAME</h1>
-              
-              <div className="inline-flex items-center bg-secondary text-muted-foreground px-3 py-2 rounded-lg text-sm font-mono mb-4 lg:mb-6">
-                <span>{address?.slice(0, 6)}...{address?.slice(-4)}</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="ml-3 p-0 h-auto text-muted-foreground hover:text-foreground"
-                  onClick={copyAddress}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
-
-              <p className="text-muted-foreground text-sm lg:text-base mb-6 lg:mb-8 leading-relaxed">
-                NO_BIO
-              </p>
-
-              {/* Stats - Grid layout on desktop */}
-              <div className="grid grid-cols-2 lg:grid-cols-2 gap-4 lg:gap-6">
-                <div className="text-center lg:text-left">
-                  <div className="text-xl lg:text-2xl font-bold">0</div>
-                  <div className="text-muted-foreground text-xs lg:text-sm">Drops</div>
-                </div>
-                <div className="text-center lg:text-left">
-                  <div className="text-xl lg:text-2xl font-bold">0</div>
-                  <div className="text-muted-foreground text-xs lg:text-sm">Collected</div>
-                </div>
-              </div>
-
-              {/* Desktop Action Buttons */}
-              <div className="hidden lg:block mt-8 space-y-3">
-                <Button variant="outline" className="w-full">Share Profile</Button>
+          <div className="space-y-4">
+            <WalletConnect showCard={true} />
+            
+            <div className="text-center">
+              <div className="inline-flex items-center text-sm text-muted-foreground bg-muted px-3 py-2 rounded-lg">
+                <Wallet className="h-4 w-4 mr-2" />
+                Your wallet address becomes your artist profile URL
               </div>
             </div>
           </div>
 
-          {/* Content Area - Right side on desktop */}
-          <div className="lg:col-span-8">
-            <div className="px-5 lg:px-0 py-6 lg:py-0">
-              <Tabs defaultValue="drops" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 lg:mb-8">
-                  <TabsTrigger value="drops" className="lg:text-base">Drops</TabsTrigger>
-                  <TabsTrigger value="collected" className="lg:text-base">Collected</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="drops" className="mt-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-                    {drops.map((drop) => (
-                      <DropCard key={drop.id} drop={drop} />
-                    ))}
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="collected" className="mt-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-                    {collected.map((item) => (
-                      <DropCard key={item.id} drop={item} />
-                    ))}
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </div>
+          <div className="mt-8 pt-8 border-t border-border">
+            <h3 className="font-semibold mb-3">What you can do with your artist profile:</h3>
+            <ul className="text-sm text-muted-foreground space-y-2 text-left">
+              <li>• View all artworks you&apos;ve created</li>
+              <li>• See your collected NFTs</li>
+              <li>• Share your profile with others</li>
+              <li>• Update your artist information</li>
+            </ul>
+          </div>
+
+          <div className="mt-8">
+            <Button 
+              variant="outline" 
+              onClick={() => router.push('/main')}
+              className="w-full"
+            >
+              Back to Home
+            </Button>
           </div>
         </div>
-
       </div>
-
-      {copiedAddress && (
-        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-card border border-border px-4 py-2 rounded-lg text-sm z-50">
-          Address copied to clipboard!
-        </div>
-      )}
     </MainContainer>
   );
 } 
