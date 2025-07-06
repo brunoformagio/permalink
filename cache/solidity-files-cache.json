@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/Users/bruno/permalink/contracts/Permalink.sol": {
-      "lastModificationDate": 1751207975370,
-      "contentHash": "94d182610ada38f527fe2169f3be0bbb",
+      "lastModificationDate": 1751804097059,
+      "contentHash": "19166019124d786498997f16910122de",
       "sourceName": "contracts/Permalink.sol",
       "solcConfig": {
         "version": "0.8.24",

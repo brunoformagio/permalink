@@ -184,7 +184,8 @@ export function MainPageContent() {
                     price: `${featuredArtwork.price} XTZ`,
                     image: featuredArtwork.description || `Artwork #${featuredArtwork.tokenId}`,
                     imageUri: featuredArtwork.imageUri,
-                    supply: `${featuredArtwork.currentSupply}/${featuredArtwork.maxSupply} minted`
+                    supply: `${featuredArtwork.currentSupply}/${featuredArtwork.maxSupply} minted`,
+                    isZip: featuredArtwork.imageType === 'zip'
                   }}
                   onClick={() => navigateToItem(featuredArtwork.tokenId)}
                 />
@@ -206,7 +207,8 @@ export function MainPageContent() {
                         price: `${artwork.price} XTZ`,
                         image: artwork.description || `Artwork #${artwork.tokenId}`,
                         imageUri: artwork.imageUri,
-                        supply: `${artwork.currentSupply}/${artwork.maxSupply} minted`
+                        supply: `${artwork.currentSupply}/${artwork.maxSupply} minted`,
+                        isZip: artwork.imageType === 'zip'
                       }}
                       onClick={() => navigateToItem(artwork.tokenId)}
                     />

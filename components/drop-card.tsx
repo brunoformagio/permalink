@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Archive, Play } from "lucide-react";
 import Link from "next/link";
 
 interface Drop {
@@ -12,6 +13,7 @@ interface Drop {
   image: string; // Can be text description or actual image URI
   imageUri?: string; // Actual image URI for display
   supply?: string; // Optional supply information
+  isZip?: boolean; // Whether this is a zip file (generative art)
 }
 
 interface DropCardProps {
@@ -31,7 +33,18 @@ export function DropCard({ drop, onClick }: DropCardProps) {
       {onClick ? (
         <div onClick={handleCardClick}>
           <div className="w-full h-48 bg-muted flex items-center justify-center text-muted-foreground cursor-pointer overflow-hidden">
-            {drop.imageUri ? (
+            {drop.isZip ? (
+              <div className="text-center p-4">
+                <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center mx-auto mb-3">
+                  <Archive className="h-8 w-8 text-purple-600" />
+                </div>
+                <div className="text-sm font-medium text-purple-600">Generative Art</div>
+                <div className="text-xs mt-1 opacity-75 flex items-center justify-center gap-1">
+                  <Play className="h-3 w-3" />
+                  Interactive
+                </div>
+              </div>
+            ) : drop.imageUri ? (
               <img 
                 src={drop.imageUri} 
                 alt={drop.title}
@@ -48,7 +61,18 @@ export function DropCard({ drop, onClick }: DropCardProps) {
       ) : (
         <Link href={`/item/${drop.id}`}>
           <div className="w-full h-48 bg-muted flex items-center justify-center text-muted-foreground cursor-pointer overflow-hidden">
-            {drop.imageUri ? (
+            {drop.isZip ? (
+              <div className="text-center p-4">
+                <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center mx-auto mb-3">
+                  <Archive className="h-8 w-8 text-purple-600" />
+                </div>
+                <div className="text-sm font-medium text-purple-600">Generative Art</div>
+                <div className="text-xs mt-1 opacity-75 flex items-center justify-center gap-1">
+                  <Play className="h-3 w-3" />
+                  Interactive
+                </div>
+              </div>
+            ) : drop.imageUri ? (
               <img 
                 src={drop.imageUri} 
                 alt={drop.title}

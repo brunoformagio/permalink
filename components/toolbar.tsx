@@ -31,7 +31,7 @@ export function Toolbar({
   const isPathCreate = pathname === "/create";          
 
   return (
-    <div className="fixed backdrop-blur-lg left-0 w-screen top-0 bg-background z-50 px-5 lg:px-8 py-4 lg:py-6 border-b border-border flex items-center justify-between">
+    <div className="fixed backdrop-blur-lg left-0 w-screen top-0 bg-black/80 z-50 px-5 lg:px-8 py-4 lg:py-6 border-b border-border flex items-center justify-between">
       <div className="flex items-center flex-1">
         {showBackButton && (
           <Button variant="ghost" size="sm" asChild className="mr-2 lg:mr-4">

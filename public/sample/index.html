@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generative Circles</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        
+        #canvas-container {
+            border: 2px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-size: 12px;
+            background: rgba(0,0,0,0.7);
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+        
+        #controls {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            color: white;
+            font-size: 12px;
+        }
+        
+        button {
+            background: #444;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            margin: 2px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #666;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container">
+        <canvas id="canvas" width="400" height="400"></canvas>
+    </div>
+    
+    <div id="info">
+        Generative Circles<br>
+        Hash: <span id="hash">Loading...</span>
+    </div>
+    
+    <div id="controls">
+        <button onclick="regenerate()">Regenerate</button>
+        <button onclick="saveImage()">Save PNG</button>
+    </div>
+
+    <script src="sketch.js"></script>
+</body>
+</html> 

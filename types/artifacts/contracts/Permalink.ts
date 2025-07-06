@@ -38,6 +38,7 @@ export interface PermalinkInterface extends Interface {
       | "getArtistProfile"
       | "getArtistTokens"
       | "getArtwork"
+      | "getArtworkImageData"
       | "getCollectorTokens"
       | "getCurrentTokenId"
       | "isApprovedForAll"
@@ -132,6 +133,10 @@ export interface PermalinkInterface extends Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "getArtworkImageData",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "getCollectorTokens",
     values: [AddressLike]
   ): string;
@@ -145,7 +150,7 @@ export interface PermalinkInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "mintArtwork",
-    values: [string, string, string, BigNumberish, BigNumberish]
+    values: [string, string, BytesLike, string, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "name", values?: undefined): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
@@ -262,6 +267,10 @@ export interface PermalinkInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "getArtwork", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "getArtworkImageData",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "getCollectorTokens",
     data: BytesLike
@@ -405,14 +414,16 @@ export namespace ArtworkMintedEvent {
     artist: AddressLike,
     title: string,
     price: BigNumberish,
-    maxSupply: BigNumberish
+    maxSupply: BigNumberish,
+    imageSize: BigNumberish
   ];
   export type OutputTuple = [
     tokenId: bigint,
     artist: string,
     title: string,
     price: bigint,
-    maxSupply: bigint
+    maxSupply: bigint,
+    imageSize: bigint
   ];
   export interface OutputObject {
     tokenId: bigint;
@@ -420,6 +431,7 @@ export namespace ArtworkMintedEvent {
     title: string;
     price: bigint;
     maxSupply: bigint;
+    imageSize: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -651,6 +663,7 @@ export interface Permalink extends BaseContract {
         string,
         string,
         string,
+        string,
         bigint,
         bigint,
         bigint,
@@ -661,7 +674,8 @@ export interface Permalink extends BaseContract {
         artist: string;
         title: string;
         description: string;
-        metadataURI: string;
+        imageData: string;
+        imageType: string;
         price: bigint;
         maxSupply: bigint;
         currentSupply: bigint;
@@ -724,13 +738,15 @@ export interface Permalink extends BaseContract {
         bigint,
         bigint,
         bigint,
+        bigint,
         boolean,
         bigint
       ] & {
         artist: string;
         title: string;
         description: string;
-        metadataURI: string;
+        imageType: string;
+        imageSize: bigint;
         price: bigint;
         maxSupply: bigint;
         currentSupply: bigint;
@@ -738,6 +754,12 @@ export interface Permalink extends BaseContract {
         createdAt: bigint;
       }
     ],
+    "view"
+  >;
+
+  getArtworkImageData: TypedContractMethod<
+    [tokenId: BigNumberish],
+    [[string, string] & { imageData: string; imageType: string }],
     "view"
   >;
 
@@ -759,7 +781,8 @@ export interface Permalink extends BaseContract {
     [
       _title: string,
       _description: string,
-      _metadataURI: string,
+      _imageData: BytesLike,
+      _imageType: string,
       _price: BigNumberish,
       _maxSupply: BigNumberish
     ],
@@ -915,6 +938,7 @@ export interface Permalink extends BaseContract {
         string,
         string,
         string,
+        string,
         bigint,
         bigint,
         bigint,
@@ -925,7 +949,8 @@ export interface Permalink extends BaseContract {
         artist: string;
         title: string;
         description: string;
-        metadataURI: string;
+        imageData: string;
+        imageType: string;
         price: bigint;
         maxSupply: bigint;
         currentSupply: bigint;
@@ -991,13 +1016,15 @@ export interface Permalink extends BaseContract {
         bigint,
         bigint,
         bigint,
+        bigint,
         boolean,
         bigint
       ] & {
         artist: string;
         title: string;
         description: string;
-        metadataURI: string;
+        imageType: string;
+        imageSize: bigint;
         price: bigint;
         maxSupply: bigint;
         currentSupply: bigint;
@@ -1005,6 +1032,13 @@ export interface Permalink extends BaseContract {
         createdAt: bigint;
       }
     ],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "getArtworkImageData"
+  ): TypedContractMethod<
+    [tokenId: BigNumberish],
+    [[string, string] & { imageData: string; imageType: string }],
     "view"
   >;
   getFunction(
@@ -1026,7 +1060,8 @@ export interface Permalink extends BaseContract {
     [
       _title: string,
       _description: string,
-      _metadataURI: string,
+      _imageData: BytesLike,
+      _imageType: string,
       _price: BigNumberish,
       _maxSupply: BigNumberish
     ],
@@ -1247,7 +1282,7 @@ export interface Permalink extends BaseContract {
       ArtistProfileUpdatedEvent.OutputObject
     >;
 
-    "ArtworkMinted(uint256,address,string,uint256,uint256)": TypedContractEvent<
+    "ArtworkMinted(uint256,address,string,uint256,uint256,uint256)": TypedContractEvent<
       ArtworkMintedEvent.InputTuple,
       ArtworkMintedEvent.OutputTuple,
       ArtworkMintedEvent.OutputObject

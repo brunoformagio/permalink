@@ -2,7 +2,7 @@ import { ethers } from "ethers";
 import { createThirdwebClient, getContract as getThirdwebContract, prepareContractCall, sendTransaction } from "thirdweb";
 import { defineChain } from "thirdweb/chains";
 import type { Account, Wallet } from "thirdweb/wallets";
-import { extractFromDataURI, parseMetadata, getImageFromMetadata } from "./metadata";
+import { extractFromDataURI, parseMetadata } from "./metadata";
 
 // Import the compiled ABI for accurate function signatures
 import PermalinkABI from "../artifacts/contracts/Permalink.sol/Permalink.json";
@@ -70,8 +70,9 @@ export interface Artwork {
   artist: string;
   title: string;
   description: string;
-  metadataURI: string;
-  metadata?: import('@/lib/metadata').NFTMetadata; // Parsed metadata
+  imageType: string; // New: file extension (jpeg, png, gif, etc.)
+  imageSize: number; // New: image size in bytes
+  metadata?: import('@/lib/metadata').NFTMetadata; // Parsed metadata from uri()
   imageUri?: string; // Extracted image for display
   price: string; // in ETH
   maxSupply: number;
@@ -147,22 +148,24 @@ export async function getArtwork(tokenId: number): Promise<Artwork | null> {
     const contract = getContract();
     const result = await contract.getArtwork(tokenId);
     
-    // Parse metadata if it's a data URI (on-chain metadata)
+    // Get dynamic metadata from uri() function
     let metadata: import('@/lib/metadata').NFTMetadata | undefined;
     let imageUri: string | undefined;
     
-    if (result.metadataURI) {
-      if (result.metadataURI.startsWith('data:application/json;base64,')) {
-        // On-chain metadata
-        const metadataJSON = extractFromDataURI(result.metadataURI);
+    try {
+      const metadataURI = await contract.uri(tokenId);
+      
+      if (metadataURI && metadataURI.startsWith('data:application/json;base64,')) {
+        // Parse dynamically generated metadata
+        const metadataJSON = extractFromDataURI(metadataURI);
+        
         if (metadataJSON) {
           metadata = parseMetadata(metadataJSON) || undefined;
-          imageUri = metadata?.image;
+          imageUri = metadata?.image; // This will be the base64 data URI
         }
-      } else {
-        // Legacy metadata - try to extract image
-        imageUri = getImageFromMetadata(result.metadataURI) || undefined;
       }
+    } catch (error) {
+      console.error(`Error fetching metadata for token ${tokenId}:`, error);
     }
     
     return {
@@ -170,7 +173,8 @@ export async function getArtwork(tokenId: number): Promise<Artwork | null> {
       artist: result.artist,
       title: result.title,
       description: result.description,
-      metadataURI: result.metadataURI,
+      imageType: result.imageType,
+      imageSize: Number(result.imageSize),
       metadata,
       imageUri,
       price: ethers.formatEther(result.price),
@@ -181,6 +185,24 @@ export async function getArtwork(tokenId: number): Promise<Artwork | null> {
     };
   } catch (error) {
     console.error(`Error fetching artwork ${tokenId}:`, error);
+    return null;
+  }
+}
+
+/**
+ * Get artwork image data directly from contract
+ */
+export async function getArtworkImageData(tokenId: number): Promise<{ imageData: Uint8Array; imageType: string } | null> {
+  try {
+    const contract = getContract();
+    const result = await contract.getArtworkImageData(tokenId);
+    
+    return {
+      imageData: new Uint8Array(result.imageData),
+      imageType: result.imageType
+    };
+  } catch (error) {
+    console.error(`Error fetching image data for token ${tokenId}:`, error);
     return null;
   }
 }
@@ -199,7 +221,7 @@ export async function getArtistArtworks(address: string): Promise<Artwork[]> {
       })
     );
     
-    return artworks.filter((artwork: Artwork | null): artwork is Artwork => artwork !== null);
+    return artworks.filter(artwork => artwork !== null) as Artwork[];
   } catch (error) {
     console.error("Error fetching artist artworks:", error);
     return [];
@@ -220,7 +242,7 @@ export async function getCollectedArtworks(address: string): Promise<Artwork[]> 
       })
     );
     
-    return artworks.filter((artwork: Artwork | null): artwork is Artwork => artwork !== null);
+    return artworks.filter(artwork => artwork !== null) as Artwork[];
   } catch (error) {
     console.error("Error fetching collected artworks:", error);
     return [];
@@ -228,13 +250,13 @@ export async function getCollectedArtworks(address: string): Promise<Artwork[]> 
 }
 
 /**
- * Get the current total number of tokens minted
+ * Get current token ID
  */
 export async function getCurrentTokenId(): Promise<number> {
   try {
     const contract = getContract();
-    const currentId = await contract.getCurrentTokenId();
-    return Number(currentId);
+    const result = await contract.getCurrentTokenId();
+    return Number(result);
   } catch (error) {
     console.error("Error fetching current token ID:", error);
     return 0;
@@ -242,7 +264,7 @@ export async function getCurrentTokenId(): Promise<number> {
 }
 
 /**
- * Get user's balance of a specific token
+ * Get user's token balance for a specific token
  */
 export async function getUserTokenBalance(userAddress: string, tokenId: number): Promise<number> {
   try {
@@ -250,13 +272,13 @@ export async function getUserTokenBalance(userAddress: string, tokenId: number):
     const balance = await contract.balanceOf(userAddress, tokenId);
     return Number(balance);
   } catch (error) {
-    console.error(`Error fetching balance for token ${tokenId}:`, error);
+    console.error("Error fetching user token balance:", error);
     return 0;
   }
 }
 
 /**
- * Update artist profile (requires wallet connection)
+ * Update artist profile (legacy ethers version)
  */
 export async function updateArtistProfile(
   signer: ethers.Signer,
@@ -271,22 +293,23 @@ export async function updateArtistProfile(
     
     return { success: true, txHash: tx.hash };
   } catch (error) {
-    const contractError = error as ContractError;
+    console.error("Error updating artist profile:", error);
     return { 
       success: false, 
-      error: contractError.reason || contractError.message || "Transaction failed" 
+      error: error instanceof Error ? error.message : "Unknown error" 
     };
   }
 }
 
 /**
- * Mint new artwork (requires wallet connection)
+ * Mint artwork with raw image data (legacy ethers version)
  */
 export async function mintArtwork(
   signer: ethers.Signer,
   title: string,
   description: string,
-  metadataURI: string,
+  imageData: Uint8Array,
+  imageType: string,
   priceInEth: string,
   maxSupply: number
 ): Promise<{ success: boolean; tokenId?: number; txHash?: string; error?: string }> {
@@ -294,37 +317,45 @@ export async function mintArtwork(
     const contract = getContractWithSigner(signer);
     const priceInWei = ethers.parseEther(priceInEth);
     
-    const tx = await contract.mintArtwork(title, description, metadataURI, priceInWei, maxSupply);
+    const tx = await contract.mintArtwork(
+      title,
+      description,
+      imageData,
+      imageType,
+      priceInWei,
+      maxSupply
+    );
+    
     const receipt = await tx.wait();
     
-    // Get the token ID from the event
-    const event = receipt.logs.find((log: { topics: readonly string[]; data: string; }) => {
-      try {
-        const parsed = contract.interface.parseLog(log);
-        return parsed?.name === 'ArtworkMinted';
-      } catch {
-        return false;
-      }
-    });
-    
+    // Extract token ID from events
     let tokenId: number | undefined;
-    if (event) {
-      const parsed = contract.interface.parseLog(event);
-      tokenId = Number(parsed?.args?.tokenId);
+    if (receipt.logs) {
+      for (const log of receipt.logs) {
+        try {
+          const parsedLog = contract.interface.parseLog(log);
+          if (parsedLog && parsedLog.name === 'ArtworkMinted') {
+            tokenId = Number(parsedLog.args.tokenId);
+            break;
+          }
+        } catch {
+          // Skip unparseable logs
+        }
+      }
     }
     
     return { success: true, tokenId, txHash: tx.hash };
   } catch (error) {
-    const contractError = error as ContractError;
+    console.error("Error minting artwork:", error);
     return { 
       success: false, 
-      error: contractError.reason || contractError.message || "Minting failed" 
+      error: error instanceof Error ? error.message : "Unknown error" 
     };
   }
 }
 
 /**
- * Purchase artwork (requires wallet connection)
+ * Purchase artwork (legacy ethers version)
  */
 export async function purchaseArtwork(
   signer: ethers.Signer,
@@ -334,51 +365,42 @@ export async function purchaseArtwork(
 ): Promise<{ success: boolean; txHash?: string; error?: string }> {
   try {
     const contract = getContractWithSigner(signer);
-    const valueInWei = ethers.parseEther(totalPriceInEth);
+    const totalPriceInWei = ethers.parseEther(totalPriceInEth);
     
-    const tx = await contract.purchaseArtwork(tokenId, amount, { value: valueInWei });
+    const tx = await contract.purchaseArtwork(tokenId, amount, { 
+      value: totalPriceInWei 
+    });
     await tx.wait();
     
     return { success: true, txHash: tx.hash };
   } catch (error) {
-    const contractError = error as ContractError;
+    console.error("Error purchasing artwork:", error);
     return { 
       success: false, 
-      error: contractError.reason || contractError.message || "Purchase failed" 
+      error: error instanceof Error ? error.message : "Unknown error" 
     };
   }
 }
 
-/**
- * Utility function to format Ethereum addresses
- */
+// Utility functions
 export function formatAddress(address: string): string {
-  if (!address) return "";
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
-/**
- * Utility function to validate Ethereum address
- */
 export function isValidAddress(address: string): boolean {
   try {
-    return ethers.isAddress(address);
+    ethers.getAddress(address);
+    return true;
   } catch {
     return false;
   }
 }
 
-/**
- * Utility function to format date from timestamp
- */
 export function formatDate(timestamp: number): string {
   return new Date(timestamp * 1000).toLocaleDateString();
 }
 
-// =============================================================================
-// THIRDWEB V5 INTEGRATION FUNCTIONS
-// =============================================================================
-
+// Thirdweb v5 functions
 /**
  * Update artist profile using thirdweb v5
  */
@@ -402,42 +424,25 @@ export async function updateArtistProfileV5(
       account,
     });
 
-    return { 
-      success: true, 
-      txHash: result.transactionHash 
-    };
-  } catch (error: unknown) {
-    console.error("Profile update error:", error);
-    
-    // Handle common error types
-    let errorMessage = "Transaction failed";
-    const errorObj = error as { message?: string };
-    
-    if (errorObj?.message?.includes("rejected")) {
-      errorMessage = "Transaction was rejected by user";
-    } else if (errorObj?.message?.includes("insufficient funds")) {
-      errorMessage = "Insufficient funds for transaction";
-    } else if (errorObj?.message?.includes("gas")) {
-      errorMessage = "Transaction failed due to gas issues";
-    } else if (errorObj?.message) {
-      errorMessage = errorObj.message;
-    }
-
+    return { success: true, txHash: result.transactionHash };
+  } catch (error) {
+    console.error("Error updating artist profile:", error);
     return { 
       success: false, 
-      error: errorMessage 
+      error: error instanceof Error ? error.message : "Unknown error" 
     };
   }
 }
 
 /**
- * Mint artwork using thirdweb v5
+ * Mint artwork with raw image data using thirdweb v5
  */
 export async function mintArtworkV5(
   account: Account,
   title: string,
   description: string,
-  metadataURI: string,
+  imageData: Uint8Array,
+  imageType: string,
   priceInEth: string,
   maxSupply: number
 ): Promise<{ success: boolean; tokenId?: number; txHash?: string; error?: string }> {
@@ -447,8 +452,8 @@ export async function mintArtworkV5(
     
     const transaction = prepareContractCall({
       contract,
-      method: "function mintArtwork(string _title, string _description, string _metadataURI, uint256 _price, uint256 _maxSupply) returns (uint256)",
-      params: [title, description, metadataURI, priceInWei, BigInt(maxSupply)],
+      method: "function mintArtwork(string _title, string _description, bytes _imageData, string _imageType, uint256 _price, uint256 _maxSupply) returns (uint256)",
+      params: [title, description, `0x${Array.from(imageData).map(b => b.toString(16).padStart(2, '0')).join('')}` as `0x${string}`, imageType, priceInWei, BigInt(maxSupply)],
     });
 
     const result = await sendTransaction({
@@ -456,29 +461,14 @@ export async function mintArtworkV5(
       account,
     });
 
-    // Note: Getting tokenId from events in thirdweb v5 might require additional steps
+    // Note: Getting tokenId from thirdweb v5 events requires additional setup
     // For now, we'll return success without tokenId
-    return { 
-      success: true, 
-      txHash: result.transactionHash 
-    };
-  } catch (error: unknown) {
-    console.error("Minting error:", error);
-    
-    let errorMessage = "Minting failed";
-    const errorObj = error as { message?: string };
-    
-    if (errorObj?.message?.includes("rejected")) {
-      errorMessage = "Transaction was rejected by user";
-    } else if (errorObj?.message?.includes("insufficient funds")) {
-      errorMessage = "Insufficient funds for transaction";
-    } else if (errorObj?.message) {
-      errorMessage = errorObj.message;
-    }
-
+    return { success: true, txHash: result.transactionHash };
+  } catch (error) {
+    console.error("Error minting artwork:", error);
     return { 
       success: false, 
-      error: errorMessage 
+      error: error instanceof Error ? error.message : "Unknown error" 
     };
   }
 }
@@ -508,33 +498,18 @@ export async function purchaseArtworkV5(
       account,
     });
 
-    return { 
-      success: true, 
-      txHash: result.transactionHash 
-    };
-  } catch (error: unknown) {
-    console.error("Purchase error:", error);
-    
-    let errorMessage = "Purchase failed";
-    const errorObj = error as { message?: string };
-    
-    if (errorObj?.message?.includes("rejected")) {
-      errorMessage = "Transaction was rejected by user";
-    } else if (errorObj?.message?.includes("insufficient funds")) {
-      errorMessage = "Insufficient funds for purchase";
-    } else if (errorObj?.message) {
-      errorMessage = errorObj.message;
-    }
-
+    return { success: true, txHash: result.transactionHash };
+  } catch (error) {
+    console.error("Error purchasing artwork:", error);
     return { 
       success: false, 
-      error: errorMessage 
+      error: error instanceof Error ? error.message : "Unknown error" 
     };
   }
 }
 
 /**
- * Helper function to get account from thirdweb wallet
+ * Get account from thirdweb wallet
  */
 export function getAccountFromWallet(wallet: Wallet): Account | null {
   try {
@@ -544,4 +519,6 @@ export function getAccountFromWallet(wallet: Wallet): Account | null {
     console.error("Error getting account from wallet:", error);
     return null;
   }
-} 
+}
+
+ 

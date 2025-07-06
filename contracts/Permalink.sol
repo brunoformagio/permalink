@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 
 /**
  * @title Permalink - Generative Art NFT Platform
- * @dev Multi-edition NFT contract with artist profiles and marketplace functionality
+ * @dev Multi-edition NFT contract with artist profiles and on-chain image storage
  */
 contract Permalink is ERC1155, ERC1155Supply, Ownable, ReentrancyGuard, Pausable {
     // Contract name and symbol
@@ -36,13 +36,14 @@ contract Permalink is ERC1155, ERC1155Supply, Ownable, ReentrancyGuard, Pausable
         bool isRegistered;
     }
     
-    // Artwork Structure
+    // Artwork Structure - Updated for efficient storage
     struct Artwork {
         uint256 tokenId;
         address artist;
         string title;
         string description;
-        string metadataURI;
+        bytes imageData;        // Raw image bytes for on-chain storage
+        string imageType;       // File extension: "jpeg", "png", "gif", "zip"
         uint256 price;
         uint256 maxSupply;
         uint256 currentSupply;
@@ -70,7 +71,8 @@ contract Permalink is ERC1155, ERC1155Supply, Ownable, ReentrancyGuard, Pausable
         address indexed artist,
         string title,
         uint256 price,
-        uint256 maxSupply
+        uint256 maxSupply,
+        uint256 imageSize
     );
     
     event ArtworkPurchased(
@@ -95,7 +97,7 @@ contract Permalink is ERC1155, ERC1155Supply, Ownable, ReentrancyGuard, Pausable
     }
     
     constructor(address initialOwner) ERC1155("") Ownable(initialOwner) {
-        // Set initial URI pattern
+        // Set initial URI pattern (will be overridden by dynamic generation)
         _setURI("https://api.permalink.art/metadata/{id}.json");
     }
     
@@ -123,29 +125,34 @@ contract Permalink is ERC1155, ERC1155Supply, Ownable, ReentrancyGuard, Pausable
     }
     
     /**
-     * @dev Mint new artwork with multiple editions
+     * @dev Mint new artwork with on-chain image storage
      */
     function mintArtwork(
         string memory _title,
         string memory _description,
-        string memory _metadataURI,
+        bytes memory _imageData,
+        string memory _imageType,
         uint256 _price,
         uint256 _maxSupply
     ) external whenNotPaused nonReentrant returns (uint256) {
         require(_maxSupply > 0, "Max supply must be greater than 0");
         require(bytes(_title).length > 0, "Title cannot be empty");
-        require(bytes(_metadataURI).length > 0, "Metadata URI cannot be empty");
+        require(_imageData.length > 0, "Image data cannot be empty");
+        require(_imageData.length <= 16 * 1024, "Image too large (16KB max)");
+        require(bytes(_imageType).length > 0, "Image type cannot be empty");
+        require(_isValidImageType(_imageType), "Invalid image type");
         
         _currentTokenId++;
         uint256 newTokenId = _currentTokenId;
         
-        // Create artwork record
+        // Create artwork record with raw image data
         artworks[newTokenId] = Artwork({
             tokenId: newTokenId,
             artist: msg.sender,
             title: _title,
             description: _description,
-            metadataURI: _metadataURI,
+            imageData: _imageData,
+            imageType: _imageType,
             price: _price,
             maxSupply: _maxSupply,
             currentSupply: 0,
@@ -165,7 +172,7 @@ contract Permalink is ERC1155, ERC1155Supply, Ownable, ReentrancyGuard, Pausable
         }
         profile.totalCreated++;
         
-        emit ArtworkMinted(newTokenId, msg.sender, _title, _price, _maxSupply);
+        emit ArtworkMinted(newTokenId, msg.sender, _title, _price, _maxSupply, _imageData.length);
         
         return newTokenId;
     }
@@ -260,7 +267,8 @@ contract Permalink is ERC1155, ERC1155Supply, Ownable, ReentrancyGuard, Pausable
         address artist,
         string memory title,
         string memory description,
-        string memory metadataURI,
+        string memory imageType,
+        uint256 imageSize,
         uint256 price,
         uint256 maxSupply,
         uint256 currentSupply,
@@ -272,13 +280,25 @@ contract Permalink is ERC1155, ERC1155Supply, Ownable, ReentrancyGuard, Pausable
             artwork.artist,
             artwork.title,
             artwork.description,
-            artwork.metadataURI,
+            artwork.imageType,
+            artwork.imageData.length,
             artwork.price,
             artwork.maxSupply,
             artwork.currentSupply,
             artwork.isActive,
             artwork.createdAt
         );
+    }
+    
+    /**
+     * @dev Get artwork image data (for direct access)
+     */
+    function getArtworkImageData(uint256 tokenId) external view validTokenId(tokenId) returns (
+        bytes memory imageData,
+        string memory imageType
+    ) {
+        Artwork memory artwork = artworks[tokenId];
+        return (artwork.imageData, artwork.imageType);
     }
     
     /**
@@ -366,20 +386,167 @@ contract Permalink is ERC1155, ERC1155Supply, Ownable, ReentrancyGuard, Pausable
     }
     
     /**
-     * @dev Override URI function to return per-token metadata
-     * This is critical for MetaMask and other wallets to display NFT metadata
+     * @dev Override URI function to generate metadata dynamically
+     * This creates OpenSea-compatible metadata on-demand from stored data
      */
     function uri(uint256 tokenId) public view virtual override returns (string memory) {
-        // Check if token exists and has metadata
+        // Check if token exists
         if (tokenId <= _currentTokenId && tokenId > 0) {
             Artwork memory artwork = artworks[tokenId];
-            if (bytes(artwork.metadataURI).length > 0) {
-                return artwork.metadataURI;
+            if (artwork.imageData.length > 0) {
+                return _generateMetadata(tokenId);
             }
         }
         
-        // Fall back to base URI if no specific metadata found
+        // Fall back to base URI if no artwork found
         return super.uri(tokenId);
+    }
+    
+    /**
+     * @dev Generate NFT metadata dynamically from stored artwork data
+     */
+    function _generateMetadata(uint256 tokenId) internal view returns (string memory) {
+        Artwork memory artwork = artworks[tokenId];
+        
+        // Build base64 image data URI
+        string memory imageDataURI = string(abi.encodePacked(
+            "data:image/", artwork.imageType, ";base64,",
+            _bytesToBase64(artwork.imageData)
+        ));
+        
+        // Build compact metadata JSON
+        string memory metadata = string(abi.encodePacked(
+            '{"name":"', artwork.title, ' #', _toString(tokenId), '",',
+            '"description":"', artwork.description, '",',
+            '"image":"', imageDataURI, '",',
+            '"attributes":[',
+                '{"trait_type":"Token Standard","value":"ERC-1155"},',
+                '{"trait_type":"Storage","value":"On-chain"},',
+                '{"trait_type":"Max Supply","value":', _toString(artwork.maxSupply), '},',
+                '{"trait_type":"Current Supply","value":', _toString(artwork.currentSupply), '},',
+                '{"trait_type":"Price (Wei)","value":', _toString(artwork.price), '},',
+                '{"trait_type":"File Size","value":', _toString(artwork.imageData.length), '},',
+                '{"trait_type":"File Type","value":"', artwork.imageType, '"},',
+                '{"trait_type":"Creator","value":"', _addressToString(artwork.artist), '"}',
+            '],',
+            '"properties":{"category":"image"}}' 
+        ));
+        
+        return string(abi.encodePacked(
+            "data:application/json;base64,",
+            _stringToBase64(metadata)
+        ));
+    }
+    
+    /**
+     * @dev Validate image type
+     */
+    function _isValidImageType(string memory imageType) internal pure returns (bool) {
+        return (
+            _compareStrings(imageType, "jpeg") ||
+            _compareStrings(imageType, "jpg") ||
+            _compareStrings(imageType, "png") ||
+            _compareStrings(imageType, "gif") ||
+            _compareStrings(imageType, "webp") ||
+            _compareStrings(imageType, "svg") ||
+            _compareStrings(imageType, "zip")
+        );
+    }
+    
+    /**
+     * @dev Convert bytes to base64 string (simplified implementation)
+     */
+    function _bytesToBase64(bytes memory data) internal pure returns (string memory) {
+        if (data.length == 0) return "";
+        
+        // Base64 encoding table
+        bytes memory table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+        
+        // Calculate the length of encoded string
+        uint256 encodedLen = 4 * ((data.length + 2) / 3);
+        
+        // Allocate the encoded string
+        bytes memory result = new bytes(encodedLen);
+        
+        uint256 i = 0;
+        uint256 j = 0;
+        
+        // Process input data in chunks of 3 bytes
+        for (i = 0; i < data.length; i += 3) {
+            uint256 a = uint256(uint8(data[i]));
+            uint256 b = (i + 1 < data.length) ? uint256(uint8(data[i + 1])) : 0;
+            uint256 c = (i + 2 < data.length) ? uint256(uint8(data[i + 2])) : 0;
+            
+            uint256 bitmap = (a << 16) | (b << 8) | c;
+            
+            result[j++] = table[(bitmap >> 18) & 63];
+            result[j++] = table[(bitmap >> 12) & 63];
+            result[j++] = table[(bitmap >> 6) & 63];
+            result[j++] = table[bitmap & 63];
+        }
+        
+        // Add padding
+        if (data.length % 3 == 1) {
+            result[encodedLen - 1] = "=";
+            result[encodedLen - 2] = "=";
+        } else if (data.length % 3 == 2) {
+            result[encodedLen - 1] = "=";
+        }
+        
+        return string(result);
+    }
+    
+    /**
+     * @dev Convert string to base64
+     */
+    function _stringToBase64(string memory input) internal pure returns (string memory) {
+        bytes memory data = bytes(input);
+        return _bytesToBase64(data);
+    }
+    
+    /**
+     * @dev Convert uint256 to string
+     */
+    function _toString(uint256 value) internal pure returns (string memory) {
+        if (value == 0) {
+            return "0";
+        }
+        uint256 temp = value;
+        uint256 digits;
+        while (temp != 0) {
+            digits++;
+            temp /= 10;
+        }
+        bytes memory buffer = new bytes(digits);
+        while (value != 0) {
+            digits -= 1;
+            buffer[digits] = bytes1(uint8(48 + uint256(value % 10)));
+            value /= 10;
+        }
+        return string(buffer);
+    }
+    
+    /**
+     * @dev Convert address to string
+     */
+    function _addressToString(address addr) internal pure returns (string memory) {
+        bytes32 value = bytes32(uint256(uint160(addr)));
+        bytes memory alphabet = "0123456789abcdef";
+        bytes memory str = new bytes(42);
+        str[0] = '0';
+        str[1] = 'x';
+        for (uint256 i = 0; i < 20; i++) {
+            str[2 + i * 2] = alphabet[uint8(value[i + 12] >> 4)];
+            str[3 + i * 2] = alphabet[uint8(value[i + 12] & 0x0f)];
+        }
+        return string(str);
+    }
+    
+    /**
+     * @dev Compare two strings
+     */
+    function _compareStrings(string memory a, string memory b) internal pure returns (bool) {
+        return keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b));
     }
     
     /**

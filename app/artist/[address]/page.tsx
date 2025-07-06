@@ -271,7 +271,8 @@ export default function DynamicArtistPage() {
                             artist: "Created",
                             price: `${artwork.price} XTZ`,
                             image: artwork.description || `Artwork #${artwork.tokenId}`,
-                            imageUri: artwork.imageUri
+                            imageUri: artwork.imageUri,
+                            isZip: artwork.imageType === 'zip'
                           }} 
                         />
                       ))}
@@ -308,7 +309,8 @@ export default function DynamicArtistPage() {
                             artist: "Collected",
                             price: "",
                             image: artwork.description || `Artwork #${artwork.tokenId}`,
-                            imageUri: artwork.imageUri
+                            imageUri: artwork.imageUri,
+                            isZip: artwork.imageType === 'zip'
                           }} 
                         />
                       ))}

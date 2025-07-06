@@ -8,19 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { Upload, Image, FileText, DollarSign, Hash, Wallet } from "lucide-react";
+import { Upload, Image, FileText, DollarSign, Hash, Wallet, Archive } from "lucide-react";
 import { Toolbar } from "@/components/toolbar";
 import { MainContainer } from "@/components/main-container";
 import { toast } from "sonner";
 import { mintArtworkV5, getAccountFromWallet } from "@/lib/contract";
-import {
-  fileToBase64,
-  validateImageFile,
-  compressImage,
-  createNFTMetadata,
-  createDataURI,
-  metadataToJSON
-} from "@/lib/metadata";
+import { validateImageFile, compressImage } from "@/lib/metadata";
 
 export default function CreatePage() {
   const router = useRouter();
@@ -34,8 +27,9 @@ export default function CreatePage() {
     editions: "1"
   });
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [imageBase64, setImageBase64] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageProcessing, setImageProcessing] = useState(false);
+  const [isZipFile, setIsZipFile] = useState(false);
   const [minting, setMinting] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -50,7 +44,27 @@ export default function CreatePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate image file
+    // Check if it's a zip file
+    const isZip = file.name.toLowerCase().endsWith('.zip');
+    setIsZipFile(isZip);
+
+    if (isZip) {
+      // Handle zip file (generative art)
+      if (file.size > 16 * 1024) {
+        toast.error("Zip file must be less than 16KB for on-chain storage");
+        return;
+      }
+      
+      setUploadedFile(file);
+      setImagePreview(null); // No preview for zip files
+      
+      toast.success(
+        `Generative art package uploaded! (${(file.size / 1024).toFixed(1)} KB)`
+      );
+      return;
+    }
+
+    // Handle image file
     const validation = validateImageFile(file);
     if (!validation.valid) {
       toast.error(validation.error);
@@ -63,21 +77,20 @@ export default function CreatePage() {
 
       // Compress image if needed for on-chain storage
       let processedFile = file;
-      if (file.size > 5 * 1024 * 1024) { // If larger than 5MB, compress
+      if (file.size > 16 * 1024) { // If larger than 16KB, compress
         toast.loading("Compressing image for optimal on-chain storage...", { id: "image-processing" });
-        processedFile = await compressImage(file, 5000); // 5MB max
+        processedFile = await compressImage(file, 16); // 16KB max
       }
 
-      // Convert to base64
-      toast.loading("Converting image to base64...", { id: "image-processing" });
-      const base64Image = await fileToBase64(processedFile);
+      // Create preview URL
+      const previewUrl = URL.createObjectURL(processedFile);
       
       // Update state
       setUploadedFile(processedFile);
-      setImageBase64(base64Image);
+      setImagePreview(previewUrl);
       
       toast.success(
-        `Image processed successfully! (${(processedFile.size / 1024 / 1024).toFixed(2)} MB)`,
+        `Image processed successfully! (${(processedFile.size / 1024).toFixed(1)} KB)`,
         { id: "image-processing" }
       );
 
@@ -85,7 +98,7 @@ export default function CreatePage() {
       console.error("Error processing image:", error);
       toast.error("Failed to process image. Please try again.", { id: "image-processing" });
       setUploadedFile(null);
-      setImageBase64(null);
+      setImagePreview(null);
     } finally {
       setImageProcessing(false);
     }
@@ -99,7 +112,7 @@ export default function CreatePage() {
       return;
     }
 
-    if (!uploadedFile || !imageBase64) {
+    if (!uploadedFile) {
       toast.error("Please upload an artwork file");
       return;
     }
@@ -129,46 +142,41 @@ export default function CreatePage() {
         return;
       }
       
-      // Show metadata creation progress
-      toast.loading("Creating NFT metadata...", { id: "minting-progress" });
+      // Show processing progress
+      toast.loading("Converting image to bytes for on-chain storage...", { id: "minting-progress" });
       
-      // Generate a temporary token ID (this will be replaced by actual ID from contract)
-      const tempTokenId = Date.now();
+      // Convert file to bytes array
+      const arrayBuffer = await uploadedFile.arrayBuffer();
+      const imageBytes = new Uint8Array(arrayBuffer);
       
-      // Create standard NFT metadata with on-chain image
-      const metadata = createNFTMetadata(
-        tempTokenId,
-        formData.title,
-        formData.description,
-        imageBase64,
-        currentUserAddress,
-        formData.price,
-        parseInt(formData.editions)
-      );
+      // Get file extension from MIME type or filename
+      let imageType: string;
+      if (uploadedFile.name.toLowerCase().endsWith('.zip')) {
+        imageType = 'zip';
+      } else {
+        const mimeType = uploadedFile.type;
+        imageType = mimeType.split('/')[1]; // "jpeg", "png", etc.
+      }
       
-      // Convert metadata to JSON string for on-chain storage
-      const metadataJSON = metadataToJSON(metadata);
-      
-      // Create data URI for metadata (this will be stored on-chain)
-      const metadataURI = createDataURI(metadataJSON);
-      
-      console.log("Metadata size:", (metadataJSON.length / 1024).toFixed(2), "KB");
+      console.log("Image size:", imageBytes.length, "bytes");
+      console.log("Image type:", imageType);
       
       // Show minting progress
-      toast.loading("Minting NFT with on-chain metadata...", { id: "minting-progress" });
+      toast.loading("Minting NFT with on-chain image storage...", { id: "minting-progress" });
       
-      // Call the real contract function
+      // Call the contract function with raw image data
       const result = await mintArtworkV5(
         account,
         formData.title,
         formData.description,
-        metadataURI, // This now contains the full metadata with base64 image
+        imageBytes,      // Raw image bytes
+        imageType,       // File extension
         formData.price,
         parseInt(formData.editions)
       );
 
       if (result.success) {
-        toast.success("Artwork minted successfully with on-chain metadata!", { id: "minting-progress" });
+        toast.success("Artwork minted successfully with on-chain storage!", { id: "minting-progress" });
         
         // Show transaction hash
         if (result.txHash) {
@@ -195,8 +203,6 @@ export default function CreatePage() {
         });
         
         // Redirect to main page where user can see their new artwork
-        // In production, you'd parse the transaction receipt to get the tokenId
-        // and redirect to `/item/${result.tokenId}`
         setTimeout(() => {
           toast.success("Welcome to your updated gallery!", {
             id: "minting-redirect"
@@ -222,7 +228,6 @@ export default function CreatePage() {
                      formData.editions && 
                      parseInt(formData.editions) > 0 &&
                      uploadedFile &&
-                     imageBase64 &&
                      !imageProcessing &&
                      currentUserAddress;
 
@@ -239,7 +244,7 @@ export default function CreatePage() {
         <div className="mb-8 lg:mb-12 text-center lg:text-left">
           <h1 className="text-2xl lg:text-4xl font-bold mb-2 lg:mb-4">Mint on Etherlink</h1>
           <p className="text-muted-foreground lg:text-lg">
-            Upload your artwork and mint it as an NFT on the Etherlink blockchain.
+            Upload your artwork and mint it as an NFT with on-chain image storage.
           </p>
         </div>
 
@@ -279,7 +284,7 @@ export default function CreatePage() {
                           id="file-upload"
                           type="file"
                           className="hidden"
-                          accept="image/*"
+                          accept="image/*,.zip"
                           onChange={handleFileUpload}
                           disabled={minting}
                         />
@@ -288,21 +293,33 @@ export default function CreatePage() {
                             <div className="animate-spin rounded-full h-12 w-12 lg:h-16 lg:w-16 border-b-2 border-primary mx-auto" />
                             <div className="font-medium lg:text-lg">Processing image...</div>
                             <div className="text-muted-foreground text-sm lg:text-base">
-                              Converting to on-chain format
+                              Optimizing for on-chain storage
                             </div>
                           </div>
-                        ) : uploadedFile && imageBase64 ? (
+                        ) : uploadedFile ? (
                           <div className="space-y-3">
-                            <div className="w-24 h-24 lg:w-32 lg:h-32 mx-auto rounded-lg overflow-hidden border">
-                              <img 
-                                src={imageBase64} 
-                                alt="Uploaded artwork"
+                            {isZipFile ? (
+                              <div className="w-24 h-24 lg:w-32 lg:h-32 mx-auto rounded-lg border bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
+                                <Archive className="h-12 w-12 lg:h-16 lg:w-16 text-purple-600" />
+                              </div>
+                            ) : imagePreview ? (
+                              <div className="w-24 h-24 lg:w-32 lg:h-32 mx-auto rounded-lg overflow-hidden border">
+                                                              <img 
+                                src={imagePreview} 
+                                alt="Uploaded artwork preview"
                                 className="w-full h-full object-cover"
                               />
-                            </div>
+                              </div>
+                            ) : null}
                             <div className="font-medium lg:text-lg">{uploadedFile.name}</div>
                             <div className="text-green-500 text-sm lg:text-base">
-                              Ready for on-chain minting ({(uploadedFile.size / 1024 / 1024).toFixed(2)} MB)
+                              {isZipFile ? "Generative art ready" : "Ready for on-chain storage"} ({(uploadedFile.size / 1024).toFixed(1)} KB)
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {isZipFile 
+                                ? "Interactive artwork will be stored permanently on the blockchain"
+                                : "Image will be stored permanently on the blockchain"
+                              }
                             </div>
                           </div>
                         ) : (
@@ -310,7 +327,7 @@ export default function CreatePage() {
                             <Upload className="h-12 w-12 lg:h-16 lg:w-16 text-muted-foreground mx-auto" />
                             <div className="font-medium lg:text-lg">Click to upload your artwork</div>
                             <div className="text-muted-foreground text-sm lg:text-base">
-                              Images up to 10 MB for on-chain storage
+                              Images or .zip files up to 16 KB for permanent on-chain storage
                             </div>
                           </div>
                         )}
@@ -441,16 +458,25 @@ export default function CreatePage() {
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2" />
                         <div className="text-sm font-medium">Processing...</div>
                       </div>
-                    ) : imageBase64 ? (
+                    ) : uploadedFile && isZipFile ? (
+                      <div className="text-center flex flex-col items-center justify-center h-full">
+                        <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center mb-3">
+                          <Archive className="h-10 w-10 text-purple-600" />
+                        </div>
+                        <div className="text-sm font-medium text-purple-600">Generative Art</div>
+                        <div className="text-xs text-muted-foreground">Interactive artwork package</div>
+                      </div>
+                    ) : imagePreview ? (
                       <img 
-                        src={imageBase64} 
+                        src={imagePreview} 
                         alt="Artwork preview"
                         className="w-full h-full object-cover"
                       />
                     ) : (
                       <div className="text-center text-muted-foreground">
                         <Image className="h-12 w-12 mx-auto mb-2" />
-                        <div className="text-sm">Upload an image to preview</div>
+                        <div className="text-sm">Upload artwork to preview</div>
+                        <div className="text-xs mt-1">Images or .zip files</div>
                       </div>
                     )}
                   </div>
@@ -470,6 +496,36 @@ export default function CreatePage() {
                       )}
                     </div>
                   )}
+                </CardContent>
+              </Card>
+
+              {/* Storage Info */}
+              <Card>
+                <CardContent className="p-6">
+                  <h3 className="font-semibold mb-4">On-Chain Storage</h3>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Storage Type</span>
+                      <span className="text-green-600 font-medium">On-Chain</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">File Size</span>
+                      <span>{uploadedFile ? `${(uploadedFile.size / 1024).toFixed(1)} KB` : "N/A"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Permanence</span>
+                      <span className="text-green-600 font-medium">Forever</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Metadata</span>
+                      <span className="text-blue-600 font-medium">Dynamic</span>
+                    </div>
+                  </div>
+                  <div className="mt-4 p-3 bg-muted rounded-lg">
+                    <div className="text-xs text-muted-foreground">
+                      <strong>Optimized:</strong> Images stored as raw bytes on-chain (max 16KB) with dynamic metadata generation.
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
 
@@ -499,8 +555,8 @@ export default function CreatePage() {
                       <span>10%</span>
                     </div>
                     <div className="border-t pt-3 flex justify-between font-semibold">
-                      <span>Estimated Cost</span>
-                      <span>~0.001 XTZ</span>
+                      <span>Size Limit</span>
+                      <span className="text-blue-600">16KB</span>
                     </div>
                   </div>
                 </CardContent>
@@ -511,12 +567,13 @@ export default function CreatePage() {
                 <CardContent className="p-6">
                   <h3 className="font-semibold mb-4">Tips for Success</h3>
                   <ul className="space-y-2 text-sm text-muted-foreground">
-                    <li>• Use high-quality images (up to 10MB for on-chain storage)</li>
-                    <li>• Optimize image size - larger files = higher gas costs</li>
+                    <li>• Use optimized images or .zip files (up to 16KB for on-chain storage)</li>
+                    <li>• .zip files enable generative/interactive art</li>
+                    <li>• Smaller files = lower gas costs</li>
                     <li>• Write detailed, engaging descriptions</li>
                     <li>• Research comparable artwork prices</li>
                     <li>• Consider limited editions for scarcity</li>
-                    <li>• Images are stored permanently on-chain</li>
+                    <li>• Files stored permanently with dynamic metadata</li>
                   </ul>
                 </CardContent>
               </Card>
@@ -536,7 +593,7 @@ export default function CreatePage() {
                       </span>
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      All NFTs and images are stored permanently on-chain with immutable metadata.
+                      Images stored as raw bytes with metadata generated dynamically for optimal gas efficiency.
                     </div>
                   </div>
                 </CardContent>
@@ -549,7 +606,7 @@ export default function CreatePage() {
         <Card className="mt-6 lg:hidden">
           <CardContent className="p-4">
             <p className="text-muted-foreground text-sm text-center">
-              <strong>Ready to Mint:</strong> Your artwork will be minted directly on the Etherlink blockchain.
+              <strong>Ready to Mint:</strong> Your artwork will be stored permanently on-chain (max 16KB).
             </p>
           </CardContent>
         </Card>

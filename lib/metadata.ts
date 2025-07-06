@@ -54,10 +54,10 @@ export function validateImageFile(file: File): { valid: boolean; error?: string 
     return { valid: false, error: 'File must be an image' };
   }
   
-  // Check file size (max 10MB for on-chain storage)
-  const maxSize = 10 * 1024 * 1024; // 10MB
+  // Check file size (max 16KB for on-chain storage)
+  const maxSize = 16 * 1024; // 16KB
   if (file.size > maxSize) {
-    return { valid: false, error: 'Image must be less than 10MB for on-chain storage' };
+    return { valid: false, error: 'Image must be less than 16KB for on-chain storage' };
   }
   
   // Check dimensions (optional - could be added with canvas)
@@ -67,16 +67,16 @@ export function validateImageFile(file: File): { valid: boolean; error?: string 
 /**
  * Compress image if needed (basic implementation)
  */
-export async function compressImage(file: File, maxSizeKB: number = 5000): Promise<File> {
+export async function compressImage(file: File, maxSizeKB: number = 16): Promise<File> {
   return new Promise((resolve, reject) => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     const img = new Image();
     
     img.onload = () => {
-      // Calculate new dimensions to fit within size limit
+      // Calculate new dimensions to fit within 16KB size limit
       let { width, height } = img;
-      const maxDimension = 2048; // Max dimension for reasonable on-chain storage
+      const maxDimension = 2048; // Very small dimensions for 16KB limit
       
       if (width > maxDimension || height > maxDimension) {
         if (width > height) {
@@ -94,8 +94,8 @@ export async function compressImage(file: File, maxSizeKB: number = 5000): Promi
       // Draw and compress
       ctx?.drawImage(img, 0, 0, width, height);
       
-      // Try different quality levels to meet size requirement
-      let quality = 0.9;
+      // Try different quality levels to meet 16KB requirement
+      let quality = 0.9; // Start with lower quality for 16KB target
       const tryCompress = () => {
         canvas.toBlob((blob) => {
           if (!blob) {
@@ -104,14 +104,14 @@ export async function compressImage(file: File, maxSizeKB: number = 5000): Promi
           }
           
           // Check if size is acceptable
-          if (blob.size <= maxSizeKB * 1024 || quality <= 0.1) {
+          if (blob.size <= maxSizeKB * 1024 || quality <= 0.05) {
             const compressedFile = new File([blob], file.name, {
               type: 'image/jpeg',
               lastModified: Date.now(),
             });
             resolve(compressedFile);
           } else {
-            quality -= 0.1;
+            quality -= 0.05; // Smaller decrements for fine-tuning
             tryCompress();
           }
         }, 'image/jpeg', quality);

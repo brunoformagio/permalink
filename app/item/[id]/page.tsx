@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Heart, Share, ShoppingCart, User, Calendar, Loader2 } from "lucide-react";
+import { Heart, Share, ShoppingCart, User, Calendar, Loader2, Archive, Play, ExternalLink } from "lucide-react";
 import { 
   getArtwork, 
   getArtistProfile,
@@ -38,6 +38,9 @@ export default function DynamicItemPage() {
   const [purchasing, setPurchasing] = useState(false);
   const [purchaseAmount, setPurchaseAmount] = useState("1");
   const [error, setError] = useState<string | null>(null);
+  const [showInteractiveViewer, setShowInteractiveViewer] = useState(false);
+  const [interactiveContent, setInteractiveContent] = useState<string | null>(null);
+  const [loadingInteractive, setLoadingInteractive] = useState(false);
 
   useEffect(() => {
     async function fetchArtworkData() {
@@ -197,6 +200,108 @@ export default function DynamicItemPage() {
     }
   };
 
+  const handlePlayInteractive = async () => {
+    if (!artwork || artwork.imageType !== 'zip') return;
+    
+    try {
+      setLoadingInteractive(true);
+      toast.loading("Loading interactive artwork...", { id: "loading-interactive" });
+      
+      // Get the base64 zip data from the imageUri
+      if (!artwork.imageUri) {
+        toast.error("No interactive content available", { id: "loading-interactive" });
+        return;
+      }
+      
+      // Extract base64 data from data URI
+      const base64Data = artwork.imageUri.split(',')[1];
+      if (!base64Data) {
+        toast.error("Invalid interactive content format", { id: "loading-interactive" });
+        return;
+      }
+      
+      // Convert base64 to binary
+      const binaryString = atob(base64Data);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      
+      // Load JSZip dynamically
+      const JSZip = (await import('jszip')).default;
+      const zip = await JSZip.loadAsync(bytes);
+      
+      // Look for index.html
+      const indexFile = zip.file('index.html');
+      if (!indexFile) {
+        toast.error("No index.html found in the artwork package", { id: "loading-interactive" });
+        return;
+      }
+      
+      // Get the HTML content
+      let htmlContent = await indexFile.async('text');
+      
+      // Process other files and create blob URLs
+      const fileUrls: { [key: string]: string } = {};
+      
+      for (const [path, zipObject] of Object.entries(zip.files)) {
+        if (!zipObject.dir && path !== 'index.html') {
+          const blob = await zipObject.async('blob');
+          fileUrls[path] = URL.createObjectURL(blob);
+        }
+      }
+      
+      // Replace relative file references with blob URLs
+      Object.keys(fileUrls).forEach(path => {
+        const regex = new RegExp(`(?:src="|href=")${path}(?=")`, 'g');
+        htmlContent = htmlContent.replace(regex, `src="${fileUrls[path]}"`);
+      });
+      
+      // Inject the token hash into the HTML
+      const hashInjection = `
+        <script>
+          // Inject token hash for deterministic generation
+          const tokenHash = "${artwork.tokenId ? `0x${artwork.tokenId.toString(16).padStart(64, '0')}` : '0x0'}";
+          
+          // Override URL parameters
+          const originalURLSearchParams = window.URLSearchParams;
+          window.URLSearchParams = function(search) {
+            const params = new originalURLSearchParams(search);
+            params.set('hash', tokenHash);
+            return params;
+          };
+          
+          // Send hash message after load
+          window.addEventListener('load', function() {
+            window.postMessage({
+              type: 'SET_HASH',
+              hash: tokenHash
+            }, '*');
+          });
+        </script>
+      `;
+      
+      // Insert the script before closing head tag
+      htmlContent = htmlContent.replace('</head>', hashInjection + '</head>');
+      
+      setInteractiveContent(htmlContent);
+      setShowInteractiveViewer(true);
+      
+      toast.success("Interactive artwork loaded!", { id: "loading-interactive" });
+      
+    } catch (error) {
+      console.error('Error loading interactive content:', error);
+      toast.error("Failed to load interactive content", { id: "loading-interactive" });
+    } finally {
+      setLoadingInteractive(false);
+    }
+  };
+
+  const handleStopInteractive = () => {
+    setShowInteractiveViewer(false);
+    setInteractiveContent(null);
+  };
+
   const isOwner = currentUserAddress?.toLowerCase() === artwork?.artist.toLowerCase();
   const availableSupply = artwork ? artwork.maxSupply - artwork.currentSupply : 0;
   const totalPrice = artwork ? (parseFloat(artwork.price) * parseInt(purchaseAmount || "1")).toFixed(4) : "0";
@@ -247,20 +352,79 @@ export default function DynamicItemPage() {
             <Card className="mb-6 lg:mb-0">
               <CardContent className="p-0">
                 {/* Artwork Preview */}
-                <div className="aspect-square bg-muted flex items-center justify-center text-muted-foreground overflow-hidden">
-                  {artwork.imageUri ? (
+                <div className="aspect-square bg-muted flex items-center justify-center text-muted-foreground overflow-hidden relative">
+                  {artwork.imageType === 'zip' && showInteractiveViewer && interactiveContent ? (
+                    // Interactive content running
+                    <div className="w-full h-full relative">
+                      <iframe
+                        srcDoc={interactiveContent}
+                        className="w-full h-full border-0"
+                        sandbox="allow-scripts allow-same-origin"
+                        title={`Interactive artwork: ${artwork.title}`}
+                      />
+                      <div className="absolute top-2 right-2 flex gap-2">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => {
+                            const blob = new Blob([interactiveContent], { type: 'text/html' });
+                            const url = URL.createObjectURL(blob);
+                            window.open(url, '_blank');
+                          }}
+                          className="bg-black/50 hover:bg-black/70 text-white border-white/20"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={handleStopInteractive}
+                          className="bg-black/50 hover:bg-black/70 text-white border-white/20"
+                        >
+                          ✕
+                        </Button>
+                      </div>
+                    </div>
+                  ) : artwork.imageType === 'zip' ? (
+                    // Interactive preview (not yet loaded)
+                    <div className="text-center p-8">
+                      <div className="w-24 h-24 rounded-lg bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center mx-auto mb-4">
+                        <Archive className="h-12 w-12 text-purple-600" />
+                      </div>
+                      <div className="text-lg font-semibold mb-2 text-purple-600">Generative Art</div>
+                      <div className="text-sm mb-4">Interactive artwork package</div>
+                      <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-4">
+                        <Play className="h-4 w-4" />
+                        <span>Contains interactive code</span>
+                      </div>
+                      <Button 
+                        onClick={handlePlayInteractive}
+                        disabled={loadingInteractive}
+                        className="bg-purple-600 hover:bg-purple-700 text-white"
+                        size="sm"
+                      >
+                        {loadingInteractive ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Loading...
+                          </>
+                        ) : (
+                          <>
+                            <Play className="h-4 w-4 mr-2" />
+                            Play Interactive Art
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  ) : artwork.imageUri ? (
+                    // Regular image
                     <img 
                       src={artwork.imageUri} 
                       alt={artwork.title}
                       className="w-full h-full object-cover"
                     />
-                  ) : artwork.metadataURI ? (
-                    <div className="text-center p-8">
-                      <div className="text-lg font-semibold mb-2">{artwork.title}</div>
-                      <div className="text-sm opacity-75">Token ID: {artwork.tokenId}</div>
-                      <div className="text-xs mt-4">Generative Art NFT</div>
-                    </div>
                   ) : (
+                    // No preview
                     <div className="text-center p-8">
                       <div className="text-lg font-semibold mb-2">{artwork.title}</div>
                       <div className="text-sm">No preview available</div>
@@ -315,7 +479,44 @@ export default function DynamicItemPage() {
                       <div className="text-sm text-muted-foreground">Token Standard</div>
                       <div>ERC-1155</div>
                     </div>
+                    <div>
+                      <div className="text-sm text-muted-foreground">Storage</div>
+                      <div className="text-green-600 font-medium">On-Chain</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-muted-foreground">File Size</div>
+                      <div>{(artwork.imageSize / 1024).toFixed(1)} KB</div>
+                    </div>
                   </div>
+
+                  {/* Storage Info */}
+                  {artwork.metadata && (
+                    <div className="mb-6">
+                      <h3 className="font-semibold mb-2">Storage Details</h3>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <div className="text-muted-foreground">File Type</div>
+                          <div className="capitalize flex items-center gap-2">
+                            {artwork.imageType === 'zip' && <Archive className="h-4 w-4 text-purple-600" />}
+                            {artwork.imageType}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-muted-foreground">Metadata</div>
+                          <div className="text-blue-600">Dynamic</div>
+                        </div>
+                        {artwork.imageType === 'zip' && (
+                          <div className="col-span-2">
+                            <div className="text-muted-foreground">Content Type</div>
+                            <div className="text-purple-600 flex items-center gap-2">
+                              <Play className="h-4 w-4" />
+                              Interactive/Generative Art
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -510,6 +711,8 @@ export default function DynamicItemPage() {
           </div>
         </div>
       </div>
+
+
     </MainContainer>
   );
 } 

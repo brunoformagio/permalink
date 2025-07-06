@@ -21,7 +21,10 @@ export default function Home() {
     <>
             <header className="flex justify-between items-center py-4 lg:py-6 border-b border-border ">
           <div className="flex items-center w-full justify-between mx-auto px-10 container">
-          <div className="text-2xl lg:text-3xl font-bold text-[#47c89f]">Permalink</div>
+          <div className="text-2xl lg:text-3xl flex items-center gap-2 text-[#47c89f]">
+            <Image src="/permalink-logo-symbol.svg" alt="Permalink Logo" width={32} height={32} />
+            <span className="hidden sm:block"><span className="font-semibold">Perma</span>link</span>
+            </div>
           <Link href="/main">
             <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
               Demo App
