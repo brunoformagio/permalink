@@ -20,6 +20,7 @@ import {
   type Artwork
 } from "@/lib/contract";
 import { WhitelistGuard } from "@/components/whitelist-guard";
+import Image from "next/image";
 
 export default function DynamicArtistPage() {
   const params = useParams();
@@ -153,7 +154,8 @@ export default function DynamicArtistPage() {
               {/* Avatar */}
               <div className="w-20 h-20 lg:w-32 lg:h-32 rounded-full bg-muted border mx-auto lg:mx-0 mb-4 lg:mb-6 flex items-center justify-center overflow-hidden">
                 {profile?.avatarURI ? (
-                  <img 
+                  <Image
+                    unoptimized={true}
                     src={profile.avatarURI} 
                     alt={profile.artistName || "Artist avatar"}
                     className="w-full h-full object-cover"

@@ -4,14 +4,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, Network, Database, Users, Wallet, Check } from "lucide-react";
+import { Sparkles, Network, Database, Users, Check } from "lucide-react";
 import { useActiveAccount, useAutoConnect, ConnectButton } from "thirdweb/react";
 import { readContract } from "thirdweb";
 import { prepareContractCall, sendTransaction } from "thirdweb";
 import { toast } from "sonner";
-import { WalletConnect } from "@/components/wallet-connect";
 import { getPermalinkContract } from "@/lib/contract-config";
 import { client } from "@/lib/thirdweb";
 import { createWallet, inAppWallet } from "thirdweb/wallets";
@@ -26,7 +24,7 @@ export default function Home() {
   const account = useActiveAccount();
 
   // Auto-connect to handle wallet persistence
-  const { data: autoConnected, isLoading: isAutoConnecting } = useAutoConnect({
+  const {  isLoading: isAutoConnecting } = useAutoConnect({
     client,
     wallets: [
       createWallet("io.metamask"),
@@ -133,7 +131,7 @@ export default function Home() {
         params: [],
       });
 
-      const result = await sendTransaction({
+      await sendTransaction({
         transaction,
         account,
       });
@@ -233,7 +231,7 @@ export default function Home() {
                 <>
                   <h2 className="text-xl lg:text-2xl font-semibold mb-3">Get Early Access</h2>
                   <p className="text-muted-foreground mb-6">
-                    Connect your wallet to register interest in early access and stay tuned in our <a href="https://x.com/permalinkart" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">X's account</a>, we will notify when the platform is live!
+                    Connect your wallet to register interest in early access and stay tuned in our <a href="https://x.com/permalinkart" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">X&apos;s account</a>, we will notify when the platform is live!
                   </p>
               
               {isAutoConnecting ? (
@@ -279,7 +277,7 @@ export default function Home() {
                     <>
                       {isWhitelisted && (
                         <div className="text-sm text-green-400 bg-green-400/10 p-3 rounded-lg">
-                          ✅ You're already whitelisted! You can access the platform.
+                          ✅ You&apos;re already whitelisted! You can access the platform.
                         </div>
                       )}
                       

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useActiveAccount } from "thirdweb/react";
+import { ConnectButton, useActiveAccount } from "thirdweb/react";
 import { readContract, prepareContractCall, sendTransaction } from "thirdweb";
 import { MainContainer } from "@/components/main-container";
 import { Toolbar } from "@/components/toolbar";
@@ -16,6 +16,8 @@ import { toast } from "sonner";
 import { UserCheck, UserPlus, Shield, Copy, CheckCircle, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { getPermalinkContract } from "@/lib/contract-config";
+import { createWallet, inAppWallet } from "thirdweb/wallets";
+import { client } from "@/lib/thirdweb";
 
 export default function AdminPage() {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
@@ -137,7 +139,7 @@ export default function AdminPage() {
         params: [],
       });
 
-      const result = await sendTransaction({
+     await sendTransaction({
         transaction,
         account,
       });
@@ -168,7 +170,7 @@ export default function AdminPage() {
         params: [selectedAddresses],
       });
 
-      const result = await sendTransaction({
+      await sendTransaction({
         transaction,
         account,
       });
@@ -206,7 +208,7 @@ export default function AdminPage() {
         params: [newAdminAddress],
       });
 
-      const result = await sendTransaction({
+      await sendTransaction({
         transaction,
         account,
       });
@@ -271,6 +273,18 @@ export default function AdminPage() {
             <p className="text-muted-foreground mb-6">
               Please connect your wallet to access the admin panel.
             </p>
+            <ConnectButton
+              client={client}
+              wallets={[
+                createWallet("io.metamask"),
+                inAppWallet({
+                  auth: {
+                    options: ["google"],
+                  },
+                }),
+              ]}
+              theme="dark"
+            />
           </div>
         </div>
       </MainContainer>

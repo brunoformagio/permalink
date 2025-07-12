@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useActiveWallet } from "thirdweb/react";
+import { ConnectButton, useActiveWallet } from "thirdweb/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,8 @@ import { toast } from "sonner";
 import { mintArtworkV5, getAccountFromWallet } from "@/lib/contract";
 import { validateImageFile, compressImage } from "@/lib/metadata";
 import { WhitelistGuard } from "@/components/whitelist-guard";
+import { createWallet, inAppWallet } from "thirdweb/wallets";
+import { client } from "@/lib/thirdweb";
 
 export default function CreatePage() {
   const router = useRouter();
@@ -261,6 +263,18 @@ export default function CreatePage() {
                   <div className="text-sm text-orange-600/80">
                     Connect your wallet to mint artwork on the blockchain.
                   </div>
+                  <ConnectButton
+              client={client}
+              wallets={[
+                createWallet("io.metamask"),
+                inAppWallet({
+                  auth: {
+                    options: ["google"],
+                  },
+                }),
+              ]}
+              theme="dark"
+            />  
                 </div>
               </div>
             </CardContent>

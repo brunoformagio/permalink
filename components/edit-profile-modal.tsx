@@ -17,6 +17,7 @@ import { User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { type ArtistProfile, updateArtistProfileV5, getAccountFromWallet } from "@/lib/contract";
 import { toast } from "sonner";
+import Image from "next/image";
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -240,7 +241,8 @@ export function EditProfileModal({
               <Label>Avatar Preview</Label>
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-muted border overflow-hidden flex items-center justify-center">
-                  <img 
+                  <Image
+                    unoptimized={true}
                     src={formData.avatarURI} 
                     alt="Avatar preview"
                     className="w-full h-full object-cover"

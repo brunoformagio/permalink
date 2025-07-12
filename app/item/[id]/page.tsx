@@ -24,6 +24,7 @@ import {
 } from "@/lib/contract";
 import { toast } from "sonner";
 import { WhitelistGuard } from "@/components/whitelist-guard";
+import Image from "next/image";
 
 export default function DynamicItemPage() {
   const params = useParams();
@@ -420,7 +421,8 @@ export default function DynamicItemPage() {
                     </div>
                   ) : artwork.imageUri ? (
                     // Regular image
-                    <img 
+                    <Image
+                      unoptimized={true}
                       src={artwork.imageUri} 
                       alt={artwork.title}
                       className="w-full h-full object-cover"
@@ -533,7 +535,8 @@ export default function DynamicItemPage() {
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center overflow-hidden">
                       {artistProfile?.avatarURI ? (
-                                                 <img 
+                                                 <Image
+                                                 unoptimized={true}
                            src={artistProfile.avatarURI} 
                            alt={artistProfile.artistName || "Artist avatar"}
                            className="w-full h-full object-cover"

@@ -14,7 +14,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Wallet, ExternalLink } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 interface WalletConnectProps {
   onConnect?: () => void;
@@ -33,7 +33,7 @@ export function WalletConnect({
   const [isOpen, setIsOpen] = useState(false);
   
   // Auto-connect to the last connected wallet on page load
-  const { data: autoConnected, isLoading: isAutoConnecting } = useAutoConnect({
+  const { isLoading: isAutoConnecting } = useAutoConnect({
     client,
     wallets: [
       createWallet("io.metamask"),

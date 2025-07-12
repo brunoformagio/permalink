@@ -1,11 +1,13 @@
 "use client";
 
-import { useActiveAccount } from "thirdweb/react";
+import { ConnectButton, useActiveAccount } from "thirdweb/react";
 import { readContract } from "thirdweb";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { getPermalinkContract } from "@/lib/contract-config";
+import { createWallet, inAppWallet } from "thirdweb/wallets";
+import { client } from "@/lib/thirdweb";
 
 interface WhitelistGuardProps {
   children: React.ReactNode;
@@ -89,6 +91,18 @@ export function WhitelistGuard({ children, fallback }: WhitelistGuardProps) {
             <p className="text-muted-foreground mb-6">
               Please connect your wallet to access this page.
             </p>
+            <ConnectButton
+              client={client}
+              wallets={[
+                createWallet("io.metamask"),
+                inAppWallet({
+                  auth: {
+                    options: ["google"],
+                  },
+                }),
+              ]}
+              theme="dark"
+            />
           </div>
         </div>
       )

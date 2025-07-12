@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Archive, Play } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 interface Drop {
@@ -45,7 +46,8 @@ export function DropCard({ drop, onClick }: DropCardProps) {
                 </div>
               </div>
             ) : drop.imageUri ? (
-              <img 
+              <Image
+                unoptimized={true}
                 src={drop.imageUri} 
                 alt={drop.title}
                 className="w-full h-full object-cover"
@@ -73,7 +75,8 @@ export function DropCard({ drop, onClick }: DropCardProps) {
                 </div>
               </div>
             ) : drop.imageUri ? (
-              <img 
+              <Image
+                unoptimized={true}
                 src={drop.imageUri} 
                 alt={drop.title}
                 className="w-full h-full object-cover"
