@@ -19,6 +19,7 @@ import {
   type ArtistProfile,
   type Artwork
 } from "@/lib/contract";
+import { WhitelistGuard } from "@/components/whitelist-guard";
 
 export default function DynamicArtistPage() {
   const params = useParams();
@@ -102,7 +103,8 @@ export default function DynamicArtistPage() {
 
   if (loading) {
     return (
-      <MainContainer>
+      <WhitelistGuard>
+        <MainContainer>
         <Toolbar title="Loading..." showBackButton={true} isWalletConnected={!!currentUserAddress} />
         <div className="animate-fade-in flex items-center justify-center min-h-[400px]">
           <div className="text-center">
@@ -111,12 +113,14 @@ export default function DynamicArtistPage() {
           </div>
         </div>
       </MainContainer>
+      </WhitelistGuard>
     );
   }
 
   if (error) {
     return (
-      <MainContainer>
+      <WhitelistGuard>
+        <MainContainer>
         <Toolbar title="Error" showBackButton={true} isWalletConnected={!!currentUserAddress} />
         <div className="animate-fade-in flex items-center justify-center min-h-[400px]">
           <div className="text-center">
@@ -127,11 +131,13 @@ export default function DynamicArtistPage() {
           </div>
         </div>
       </MainContainer>
+      </WhitelistGuard>
     );
   }
 
   return (
-    <MainContainer>
+    <WhitelistGuard>
+      <MainContainer>
       <Toolbar 
         title={profile?.artistName || formatAddress(address)} 
         showBackButton={true} 
@@ -344,5 +350,6 @@ export default function DynamicArtistPage() {
         onProfileUpdated={handleProfileUpdated}
       />
     </MainContainer>
+    </WhitelistGuard>
   );
 } 

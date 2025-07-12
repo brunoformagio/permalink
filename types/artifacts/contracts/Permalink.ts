@@ -28,6 +28,10 @@ export interface PermalinkInterface extends Interface {
     nameOrSignature:
       | "ARTIST_ROYALTY_PERCENTAGE"
       | "MAX_PLATFORM_FEE"
+      | "addAdmin"
+      | "adminAddressList"
+      | "adminAddresses"
+      | "approveAddresses"
       | "artistProfiles"
       | "artistTokens"
       | "artworks"
@@ -35,13 +39,22 @@ export interface PermalinkInterface extends Interface {
       | "balanceOfBatch"
       | "collectorTokens"
       | "exists"
+      | "getAdminAddresses"
       | "getArtistProfile"
       | "getArtistTokens"
       | "getArtwork"
       | "getArtworkImageData"
       | "getCollectorTokens"
       | "getCurrentTokenId"
+      | "getInterestedAddresses"
+      | "getWhitelistedAddresses"
+      | "interestedAddressList"
+      | "interestedAddresses"
+      | "isAdmin"
       | "isApprovedForAll"
+      | "isInterested"
+      | "isWhitelistEnabled"
+      | "isWhitelisted"
       | "mintArtwork"
       | "name"
       | "owner"
@@ -49,6 +62,9 @@ export interface PermalinkInterface extends Interface {
       | "paused"
       | "platformFeePercentage"
       | "purchaseArtwork"
+      | "registerInterest"
+      | "removeAdmin"
+      | "removeFromWhitelist"
       | "renounceOwnership"
       | "safeBatchTransferFrom"
       | "safeTransferFrom"
@@ -58,6 +74,7 @@ export interface PermalinkInterface extends Interface {
       | "supportsInterface"
       | "symbol"
       | "toggleArtworkStatus"
+      | "toggleWhitelist"
       | "tokenToArtist"
       | "totalSupply()"
       | "totalSupply(uint256)"
@@ -66,11 +83,19 @@ export interface PermalinkInterface extends Interface {
       | "updateArtistProfile"
       | "updateArtworkPrice"
       | "uri"
+      | "whitelistEnabled"
+      | "whitelistedAddressList"
+      | "whitelistedAddresses"
       | "withdrawPlatformFees"
   ): FunctionFragment;
 
   getEvent(
     nameOrSignatureOrTopic:
+      | "AddressRegisteredInterest"
+      | "AddressRemovedFromWhitelist"
+      | "AddressWhitelisted"
+      | "AdminAdded"
+      | "AdminRemoved"
       | "ApprovalForAll"
       | "ArtistProfileUpdated"
       | "ArtworkMinted"
@@ -82,6 +107,7 @@ export interface PermalinkInterface extends Interface {
       | "TransferSingle"
       | "URI"
       | "Unpaused"
+      | "WhitelistToggled"
   ): EventFragment;
 
   encodeFunctionData(
@@ -91,6 +117,22 @@ export interface PermalinkInterface extends Interface {
   encodeFunctionData(
     functionFragment: "MAX_PLATFORM_FEE",
     values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "addAdmin",
+    values: [AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "adminAddressList",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "adminAddresses",
+    values: [AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "approveAddresses",
+    values: [AddressLike[]]
   ): string;
   encodeFunctionData(
     functionFragment: "artistProfiles",
@@ -121,6 +163,10 @@ export interface PermalinkInterface extends Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "getAdminAddresses",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "getArtistProfile",
     values: [AddressLike]
   ): string;
@@ -145,8 +191,40 @@ export interface PermalinkInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "getInterestedAddresses",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getWhitelistedAddresses",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "interestedAddressList",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "interestedAddresses",
+    values: [AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "isAdmin",
+    values: [AddressLike]
+  ): string;
+  encodeFunctionData(
     functionFragment: "isApprovedForAll",
     values: [AddressLike, AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "isInterested",
+    values: [AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "isWhitelistEnabled",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "isWhitelisted",
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "mintArtwork",
@@ -163,6 +241,18 @@ export interface PermalinkInterface extends Interface {
   encodeFunctionData(
     functionFragment: "purchaseArtwork",
     values: [BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "registerInterest",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "removeAdmin",
+    values: [AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "removeFromWhitelist",
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "renounceOwnership",
@@ -201,6 +291,10 @@ export interface PermalinkInterface extends Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "toggleWhitelist",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "tokenToArtist",
     values: [BigNumberish]
   ): string;
@@ -227,6 +321,18 @@ export interface PermalinkInterface extends Interface {
   ): string;
   encodeFunctionData(functionFragment: "uri", values: [BigNumberish]): string;
   encodeFunctionData(
+    functionFragment: "whitelistEnabled",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "whitelistedAddressList",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "whitelistedAddresses",
+    values: [AddressLike]
+  ): string;
+  encodeFunctionData(
     functionFragment: "withdrawPlatformFees",
     values?: undefined
   ): string;
@@ -237,6 +343,19 @@ export interface PermalinkInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "MAX_PLATFORM_FEE",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "addAdmin", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "adminAddressList",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "adminAddresses",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "approveAddresses",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -259,6 +378,10 @@ export interface PermalinkInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "exists", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "getAdminAddresses",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "getArtistProfile",
     data: BytesLike
   ): Result;
@@ -280,7 +403,36 @@ export interface PermalinkInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "getInterestedAddresses",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getWhitelistedAddresses",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "interestedAddressList",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "interestedAddresses",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "isAdmin", data: BytesLike): Result;
+  decodeFunctionResult(
     functionFragment: "isApprovedForAll",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "isInterested",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "isWhitelistEnabled",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "isWhitelisted",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -297,6 +449,18 @@ export interface PermalinkInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "purchaseArtwork",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "registerInterest",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "removeAdmin",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "removeFromWhitelist",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -330,6 +494,10 @@ export interface PermalinkInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "toggleWhitelist",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "tokenToArtist",
     data: BytesLike
   ): Result;
@@ -356,9 +524,83 @@ export interface PermalinkInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "uri", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "whitelistEnabled",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "whitelistedAddressList",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "whitelistedAddresses",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "withdrawPlatformFees",
     data: BytesLike
   ): Result;
+}
+
+export namespace AddressRegisteredInterestEvent {
+  export type InputTuple = [addr: AddressLike];
+  export type OutputTuple = [addr: string];
+  export interface OutputObject {
+    addr: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace AddressRemovedFromWhitelistEvent {
+  export type InputTuple = [addr: AddressLike];
+  export type OutputTuple = [addr: string];
+  export interface OutputObject {
+    addr: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace AddressWhitelistedEvent {
+  export type InputTuple = [addr: AddressLike];
+  export type OutputTuple = [addr: string];
+  export interface OutputObject {
+    addr: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace AdminAddedEvent {
+  export type InputTuple = [admin: AddressLike, addedBy: AddressLike];
+  export type OutputTuple = [admin: string, addedBy: string];
+  export interface OutputObject {
+    admin: string;
+    addedBy: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace AdminRemovedEvent {
+  export type InputTuple = [admin: AddressLike, removedBy: AddressLike];
+  export type OutputTuple = [admin: string, removedBy: string];
+  export interface OutputObject {
+    admin: string;
+    removedBy: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
 
 export namespace ApprovalForAllEvent {
@@ -586,6 +828,19 @@ export namespace UnpausedEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
+export namespace WhitelistToggledEvent {
+  export type InputTuple = [enabled: boolean, toggledBy: AddressLike];
+  export type OutputTuple = [enabled: boolean, toggledBy: string];
+  export interface OutputObject {
+    enabled: boolean;
+    toggledBy: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
 export interface Permalink extends BaseContract {
   connect(runner?: ContractRunner | null): Permalink;
   waitForDeployment(): Promise<this>;
@@ -632,6 +887,18 @@ export interface Permalink extends BaseContract {
   ARTIST_ROYALTY_PERCENTAGE: TypedContractMethod<[], [bigint], "view">;
 
   MAX_PLATFORM_FEE: TypedContractMethod<[], [bigint], "view">;
+
+  addAdmin: TypedContractMethod<[addr: AddressLike], [void], "nonpayable">;
+
+  adminAddressList: TypedContractMethod<[arg0: BigNumberish], [string], "view">;
+
+  adminAddresses: TypedContractMethod<[arg0: AddressLike], [boolean], "view">;
+
+  approveAddresses: TypedContractMethod<
+    [addresses: AddressLike[]],
+    [void],
+    "nonpayable"
+  >;
 
   artistProfiles: TypedContractMethod<
     [arg0: AddressLike],
@@ -706,6 +973,8 @@ export interface Permalink extends BaseContract {
 
   exists: TypedContractMethod<[id: BigNumberish], [boolean], "view">;
 
+  getAdminAddresses: TypedContractMethod<[], [string[]], "view">;
+
   getArtistProfile: TypedContractMethod<
     [artist: AddressLike],
     [
@@ -771,11 +1040,35 @@ export interface Permalink extends BaseContract {
 
   getCurrentTokenId: TypedContractMethod<[], [bigint], "view">;
 
+  getInterestedAddresses: TypedContractMethod<[], [string[]], "view">;
+
+  getWhitelistedAddresses: TypedContractMethod<[], [string[]], "view">;
+
+  interestedAddressList: TypedContractMethod<
+    [arg0: BigNumberish],
+    [string],
+    "view"
+  >;
+
+  interestedAddresses: TypedContractMethod<
+    [arg0: AddressLike],
+    [boolean],
+    "view"
+  >;
+
+  isAdmin: TypedContractMethod<[addr: AddressLike], [boolean], "view">;
+
   isApprovedForAll: TypedContractMethod<
     [account: AddressLike, operator: AddressLike],
     [boolean],
     "view"
   >;
+
+  isInterested: TypedContractMethod<[addr: AddressLike], [boolean], "view">;
+
+  isWhitelistEnabled: TypedContractMethod<[], [boolean], "view">;
+
+  isWhitelisted: TypedContractMethod<[addr: AddressLike], [boolean], "view">;
 
   mintArtwork: TypedContractMethod<
     [
@@ -804,6 +1097,16 @@ export interface Permalink extends BaseContract {
     [tokenId: BigNumberish, amount: BigNumberish],
     [void],
     "payable"
+  >;
+
+  registerInterest: TypedContractMethod<[], [void], "nonpayable">;
+
+  removeAdmin: TypedContractMethod<[addr: AddressLike], [void], "nonpayable">;
+
+  removeFromWhitelist: TypedContractMethod<
+    [addr: AddressLike],
+    [void],
+    "nonpayable"
   >;
 
   renounceOwnership: TypedContractMethod<[], [void], "nonpayable">;
@@ -860,6 +1163,8 @@ export interface Permalink extends BaseContract {
     "nonpayable"
   >;
 
+  toggleWhitelist: TypedContractMethod<[], [void], "nonpayable">;
+
   tokenToArtist: TypedContractMethod<[arg0: BigNumberish], [string], "view">;
 
   "totalSupply()": TypedContractMethod<[], [bigint], "view">;
@@ -892,6 +1197,20 @@ export interface Permalink extends BaseContract {
 
   uri: TypedContractMethod<[tokenId: BigNumberish], [string], "view">;
 
+  whitelistEnabled: TypedContractMethod<[], [boolean], "view">;
+
+  whitelistedAddressList: TypedContractMethod<
+    [arg0: BigNumberish],
+    [string],
+    "view"
+  >;
+
+  whitelistedAddresses: TypedContractMethod<
+    [arg0: AddressLike],
+    [boolean],
+    "view"
+  >;
+
   withdrawPlatformFees: TypedContractMethod<[], [void], "nonpayable">;
 
   getFunction<T extends ContractMethod = ContractMethod>(
@@ -904,6 +1223,18 @@ export interface Permalink extends BaseContract {
   getFunction(
     nameOrSignature: "MAX_PLATFORM_FEE"
   ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "addAdmin"
+  ): TypedContractMethod<[addr: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "adminAddressList"
+  ): TypedContractMethod<[arg0: BigNumberish], [string], "view">;
+  getFunction(
+    nameOrSignature: "adminAddresses"
+  ): TypedContractMethod<[arg0: AddressLike], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "approveAddresses"
+  ): TypedContractMethod<[addresses: AddressLike[]], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "artistProfiles"
   ): TypedContractMethod<
@@ -985,6 +1316,9 @@ export interface Permalink extends BaseContract {
     nameOrSignature: "exists"
   ): TypedContractMethod<[id: BigNumberish], [boolean], "view">;
   getFunction(
+    nameOrSignature: "getAdminAddresses"
+  ): TypedContractMethod<[], [string[]], "view">;
+  getFunction(
     nameOrSignature: "getArtistProfile"
   ): TypedContractMethod<
     [artist: AddressLike],
@@ -1048,12 +1382,36 @@ export interface Permalink extends BaseContract {
     nameOrSignature: "getCurrentTokenId"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
+    nameOrSignature: "getInterestedAddresses"
+  ): TypedContractMethod<[], [string[]], "view">;
+  getFunction(
+    nameOrSignature: "getWhitelistedAddresses"
+  ): TypedContractMethod<[], [string[]], "view">;
+  getFunction(
+    nameOrSignature: "interestedAddressList"
+  ): TypedContractMethod<[arg0: BigNumberish], [string], "view">;
+  getFunction(
+    nameOrSignature: "interestedAddresses"
+  ): TypedContractMethod<[arg0: AddressLike], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "isAdmin"
+  ): TypedContractMethod<[addr: AddressLike], [boolean], "view">;
+  getFunction(
     nameOrSignature: "isApprovedForAll"
   ): TypedContractMethod<
     [account: AddressLike, operator: AddressLike],
     [boolean],
     "view"
   >;
+  getFunction(
+    nameOrSignature: "isInterested"
+  ): TypedContractMethod<[addr: AddressLike], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "isWhitelistEnabled"
+  ): TypedContractMethod<[], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "isWhitelisted"
+  ): TypedContractMethod<[addr: AddressLike], [boolean], "view">;
   getFunction(
     nameOrSignature: "mintArtwork"
   ): TypedContractMethod<
@@ -1090,6 +1448,15 @@ export interface Permalink extends BaseContract {
     [void],
     "payable"
   >;
+  getFunction(
+    nameOrSignature: "registerInterest"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "removeAdmin"
+  ): TypedContractMethod<[addr: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "removeFromWhitelist"
+  ): TypedContractMethod<[addr: AddressLike], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "renounceOwnership"
   ): TypedContractMethod<[], [void], "nonpayable">;
@@ -1146,6 +1513,9 @@ export interface Permalink extends BaseContract {
     nameOrSignature: "toggleArtworkStatus"
   ): TypedContractMethod<[tokenId: BigNumberish], [void], "nonpayable">;
   getFunction(
+    nameOrSignature: "toggleWhitelist"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
     nameOrSignature: "tokenToArtist"
   ): TypedContractMethod<[arg0: BigNumberish], [string], "view">;
   getFunction(
@@ -1178,9 +1548,53 @@ export interface Permalink extends BaseContract {
     nameOrSignature: "uri"
   ): TypedContractMethod<[tokenId: BigNumberish], [string], "view">;
   getFunction(
+    nameOrSignature: "whitelistEnabled"
+  ): TypedContractMethod<[], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "whitelistedAddressList"
+  ): TypedContractMethod<[arg0: BigNumberish], [string], "view">;
+  getFunction(
+    nameOrSignature: "whitelistedAddresses"
+  ): TypedContractMethod<[arg0: AddressLike], [boolean], "view">;
+  getFunction(
     nameOrSignature: "withdrawPlatformFees"
   ): TypedContractMethod<[], [void], "nonpayable">;
 
+  getEvent(
+    key: "AddressRegisteredInterest"
+  ): TypedContractEvent<
+    AddressRegisteredInterestEvent.InputTuple,
+    AddressRegisteredInterestEvent.OutputTuple,
+    AddressRegisteredInterestEvent.OutputObject
+  >;
+  getEvent(
+    key: "AddressRemovedFromWhitelist"
+  ): TypedContractEvent<
+    AddressRemovedFromWhitelistEvent.InputTuple,
+    AddressRemovedFromWhitelistEvent.OutputTuple,
+    AddressRemovedFromWhitelistEvent.OutputObject
+  >;
+  getEvent(
+    key: "AddressWhitelisted"
+  ): TypedContractEvent<
+    AddressWhitelistedEvent.InputTuple,
+    AddressWhitelistedEvent.OutputTuple,
+    AddressWhitelistedEvent.OutputObject
+  >;
+  getEvent(
+    key: "AdminAdded"
+  ): TypedContractEvent<
+    AdminAddedEvent.InputTuple,
+    AdminAddedEvent.OutputTuple,
+    AdminAddedEvent.OutputObject
+  >;
+  getEvent(
+    key: "AdminRemoved"
+  ): TypedContractEvent<
+    AdminRemovedEvent.InputTuple,
+    AdminRemovedEvent.OutputTuple,
+    AdminRemovedEvent.OutputObject
+  >;
   getEvent(
     key: "ApprovalForAll"
   ): TypedContractEvent<
@@ -1258,8 +1672,70 @@ export interface Permalink extends BaseContract {
     UnpausedEvent.OutputTuple,
     UnpausedEvent.OutputObject
   >;
+  getEvent(
+    key: "WhitelistToggled"
+  ): TypedContractEvent<
+    WhitelistToggledEvent.InputTuple,
+    WhitelistToggledEvent.OutputTuple,
+    WhitelistToggledEvent.OutputObject
+  >;
 
   filters: {
+    "AddressRegisteredInterest(address)": TypedContractEvent<
+      AddressRegisteredInterestEvent.InputTuple,
+      AddressRegisteredInterestEvent.OutputTuple,
+      AddressRegisteredInterestEvent.OutputObject
+    >;
+    AddressRegisteredInterest: TypedContractEvent<
+      AddressRegisteredInterestEvent.InputTuple,
+      AddressRegisteredInterestEvent.OutputTuple,
+      AddressRegisteredInterestEvent.OutputObject
+    >;
+
+    "AddressRemovedFromWhitelist(address)": TypedContractEvent<
+      AddressRemovedFromWhitelistEvent.InputTuple,
+      AddressRemovedFromWhitelistEvent.OutputTuple,
+      AddressRemovedFromWhitelistEvent.OutputObject
+    >;
+    AddressRemovedFromWhitelist: TypedContractEvent<
+      AddressRemovedFromWhitelistEvent.InputTuple,
+      AddressRemovedFromWhitelistEvent.OutputTuple,
+      AddressRemovedFromWhitelistEvent.OutputObject
+    >;
+
+    "AddressWhitelisted(address)": TypedContractEvent<
+      AddressWhitelistedEvent.InputTuple,
+      AddressWhitelistedEvent.OutputTuple,
+      AddressWhitelistedEvent.OutputObject
+    >;
+    AddressWhitelisted: TypedContractEvent<
+      AddressWhitelistedEvent.InputTuple,
+      AddressWhitelistedEvent.OutputTuple,
+      AddressWhitelistedEvent.OutputObject
+    >;
+
+    "AdminAdded(address,address)": TypedContractEvent<
+      AdminAddedEvent.InputTuple,
+      AdminAddedEvent.OutputTuple,
+      AdminAddedEvent.OutputObject
+    >;
+    AdminAdded: TypedContractEvent<
+      AdminAddedEvent.InputTuple,
+      AdminAddedEvent.OutputTuple,
+      AdminAddedEvent.OutputObject
+    >;
+
+    "AdminRemoved(address,address)": TypedContractEvent<
+      AdminRemovedEvent.InputTuple,
+      AdminRemovedEvent.OutputTuple,
+      AdminRemovedEvent.OutputObject
+    >;
+    AdminRemoved: TypedContractEvent<
+      AdminRemovedEvent.InputTuple,
+      AdminRemovedEvent.OutputTuple,
+      AdminRemovedEvent.OutputObject
+    >;
+
     "ApprovalForAll(address,address,bool)": TypedContractEvent<
       ApprovalForAllEvent.InputTuple,
       ApprovalForAllEvent.OutputTuple,
@@ -1379,6 +1855,17 @@ export interface Permalink extends BaseContract {
       UnpausedEvent.InputTuple,
       UnpausedEvent.OutputTuple,
       UnpausedEvent.OutputObject
+    >;
+
+    "WhitelistToggled(bool,address)": TypedContractEvent<
+      WhitelistToggledEvent.InputTuple,
+      WhitelistToggledEvent.OutputTuple,
+      WhitelistToggledEvent.OutputObject
+    >;
+    WhitelistToggled: TypedContractEvent<
+      WhitelistToggledEvent.InputTuple,
+      WhitelistToggledEvent.OutputTuple,
+      WhitelistToggledEvent.OutputObject
     >;
   };
 }

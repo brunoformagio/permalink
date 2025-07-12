@@ -2,19 +2,171 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, Network, Database, Users } from "lucide-react";
+import { Sparkles, Network, Database, Users, Wallet, Check } from "lucide-react";
+import { useActiveAccount, useAutoConnect, ConnectButton } from "thirdweb/react";
+import { readContract } from "thirdweb";
+import { prepareContractCall, sendTransaction } from "thirdweb";
+import { toast } from "sonner";
+import { WalletConnect } from "@/components/wallet-connect";
+import { getPermalinkContract } from "@/lib/contract-config";
+import { client } from "@/lib/thirdweb";
+import { createWallet, inAppWallet } from "thirdweb/wallets";
 
 export default function Home() {
-  const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [whitelistEnabled, setWhitelistEnabled] = useState<boolean | null>(null);
+  const [isAlreadyInterested, setIsAlreadyInterested] = useState(false);
+  const [isWhitelisted, setIsWhitelisted] = useState(false);
+  const [checkingStatus, setCheckingStatus] = useState(false);
+  const isCheckingRef = useRef(false);
+  const account = useActiveAccount();
 
-  const handleEarlyAccess = (e: React.FormEvent) => {
+  // Auto-connect to handle wallet persistence
+  const { data: autoConnected, isLoading: isAutoConnecting } = useAutoConnect({
+    client,
+    wallets: [
+      createWallet("io.metamask"),
+      inAppWallet({
+        auth: {
+          options: ["google"],
+        },
+      }),
+    ],
+    timeout: 15000,
+  });
+
+  const contract = getPermalinkContract();
+
+  useEffect(() => {
+    const checkWhitelistStatus = async () => {
+      try {
+        const enabled = await readContract({
+          contract,
+          method: "function isWhitelistEnabled() view returns (bool)",
+          params: [],
+        });
+        setWhitelistEnabled(enabled);
+      } catch (error) {
+        console.error("Error checking whitelist status:", error);
+        // Default to enabled if we can't check
+        setWhitelistEnabled(true);
+      }
+    };
+
+    checkWhitelistStatus();
+  }, [contract]);
+
+  // Check user's registration status when account changes
+  useEffect(() => {
+    const checkUserStatus = async () => {
+      if (!account || isCheckingRef.current) {
+        if (!account) {
+          setIsAlreadyInterested(false);
+          setIsWhitelisted(false);
+          setCheckingStatus(false);
+          isCheckingRef.current = false;
+        }
+        return;
+      }
+
+      isCheckingRef.current = true;
+      setCheckingStatus(true);
+      
+      try {
+        const [whitelistedStatus, interestedStatus] = await Promise.all([
+          readContract({
+            contract,
+            method: "function isWhitelisted(address) view returns (bool)",
+            params: [account.address],
+          }),
+          readContract({
+            contract,
+            method: "function isInterested(address) view returns (bool)",
+            params: [account.address],
+          }),
+        ]);
+
+        setIsWhitelisted(whitelistedStatus);
+        setIsAlreadyInterested(interestedStatus);
+      } catch (error) {
+        console.error("Error checking user status:", error);
+        setIsAlreadyInterested(false);
+        setIsWhitelisted(false);
+      } finally {
+        setCheckingStatus(false);
+        isCheckingRef.current = false;
+      }
+    };
+
+    checkUserStatus();
+  }, [account?.address]); // Only depend on account address to prevent unnecessary re-runs
+
+  const handleEarlyAccess = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert(`Thank you for your interest! We've received your information: ${email}`);
-    setEmail("");
+    
+    if (!account) {
+      toast.error("Please connect your wallet first");
+      return;
+    }
+
+    if (isWhitelisted) {
+      toast.success("You're already whitelisted! You can access the platform.");
+      return;
+    }
+
+    if (isAlreadyInterested) {
+      toast.info("You've already registered interest. Please wait for approval.");
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      // Register interest
+      const transaction = prepareContractCall({
+        contract,
+        method: "function registerInterest()",
+        params: [],
+      });
+
+      const result = await sendTransaction({
+        transaction,
+        account,
+      });
+
+      toast.success("Successfully registered interest! You'll be notified when approved.");
+      setIsAlreadyInterested(true); // Update state to reflect registration
+    } catch (error) {
+      console.error("Error registering interest:", error);
+      toast.error("Failed to register interest. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getButtonContent = () => {
+    if (isLoading) {
+      return (
+        <>
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+          Registering...
+        </>
+      );
+    }
+
+    if (isWhitelisted) {
+      return "Already Whitelisted!";
+    }
+
+    if (isAlreadyInterested) {
+      return <span className="flex items-center gap-2">Register sent <Check className="w-4 h-4"/></span>;
+    }
+
+    return "Register Interest";
   };
 
   return (
@@ -25,11 +177,25 @@ export default function Home() {
             <Image src="/permalink-logo-symbol.svg" alt="Permalink Logo" width={32} height={32} />
             <span className="hidden sm:block"><span className="font-semibold">Perma</span>link</span>
             </div>
-          <Link href="/main">
-            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-              Demo App
-            </Button>
-          </Link></div>
+          <div className="flex items-center gap-4">
+            <Link href="/main">
+              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                Access App
+              </Button>
+            </Link>
+            <ConnectButton
+              client={client}
+              wallets={[
+                createWallet("io.metamask"),
+                inAppWallet({
+                  auth: {
+                    options: ["google"],
+                  },
+                }),
+              ]}
+              theme="dark"
+            />
+          </div></div>
         </header>
         <div className="bg-[url('/banner.png')] bg-contain bg-top !bg-no-repeat">
     <div className="container-responsive  ">
@@ -51,26 +217,87 @@ export default function Home() {
         <div className="max-w-md lg:max-w-lg mx-auto mb-10 lg:mb-16">
           <Card>
             <CardContent className="p-6 lg:p-8 text-center">
-              <h2 className="text-xl lg:text-2xl font-semibold mb-3">Get Early Access</h2>
-              <p className="text-muted-foreground mb-6">
-                Be among the first to explore Permalink when we launch. Join our exclusive early access list.
-              </p>
-              <form onSubmit={handleEarlyAccess} className="space-y-4">
-                <Input
-                  type="text"
-                  placeholder="Enter your email or X handle..."
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full px-[14px] py-[14px] bg-background border-[#333333] rounded-lg text-white text-base mb-4 h-auto focus-visible:border-[#555555] focus-visible:ring-0"
-                />
-                <Button 
-                  type="submit" 
-                  className="w-full"
-                >
-                  Join Early Access
-                </Button>
-              </form>
+              {whitelistEnabled === false ? (
+                <>
+                  <h2 className="text-xl lg:text-2xl font-semibold mb-3">Platform Now Public!</h2>
+                  <p className="text-muted-foreground mb-6">
+                    The Permalink platform is now open to everyone. Connect your wallet and start exploring!
+                  </p>
+                  <Link href="/main">
+                    <Button className="w-full">
+                      Enter Platform
+                    </Button>
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <h2 className="text-xl lg:text-2xl font-semibold mb-3">Get Early Access</h2>
+                  <p className="text-muted-foreground mb-6">
+                    Connect your wallet to register interest in early access and stay tuned in our <a href="https://x.com/permalinkart" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">X's account</a>, we will notify when the platform is live!
+                  </p>
+              
+              {isAutoConnecting ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                    <div className="text-sm text-muted-foreground">
+                      Restoring wallet connection...
+                    </div>
+                  </div>
+                </div>
+              ) : !account ? (
+                <div className="space-y-4">
+                  <div className="text-muted-foreground text-sm">
+                    Connect your wallet to register for early access
+                  </div>
+                  <ConnectButton
+                    client={client}
+                    wallets={[
+                      createWallet("io.metamask"),
+                      inAppWallet({
+                        auth: {
+                          options: ["google"],
+                        },
+                      }),
+                    ]}
+                    theme="dark"
+                    connectButton={{ label: "Connect Wallet" }}
+                    connectModal={{ size: "compact" }}
+                  />
+                </div>
+              ) : (
+                <form onSubmit={handleEarlyAccess} className="space-y-4">
+                  
+                  {checkingStatus ? (
+                    <div className="flex items-center justify-center space-x-2 py-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                      <div className="text-sm text-muted-foreground">
+                        Checking registration status...
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {isWhitelisted && (
+                        <div className="text-sm text-green-400 bg-green-400/10 p-3 rounded-lg">
+                          ✅ You're already whitelisted! You can access the platform.
+                        </div>
+                      )}
+                      
+                     </>
+                  )}
+                  
+                  <Button 
+                    type="submit" 
+                    className="w-full"
+                    disabled={isLoading || checkingStatus || isAlreadyInterested || isWhitelisted}
+                    variant={isAlreadyInterested || isWhitelisted ? "secondary" : "default"}
+                  >
+                    {getButtonContent()}
+                  </Button>
+                </form>
+              )}
+              </>
+              )}
             </CardContent>
           </Card>
         </div>

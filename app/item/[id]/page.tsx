@@ -23,6 +23,7 @@ import {
   type ArtistProfile
 } from "@/lib/contract";
 import { toast } from "sonner";
+import { WhitelistGuard } from "@/components/whitelist-guard";
 
 export default function DynamicItemPage() {
   const params = useParams();
@@ -337,7 +338,8 @@ export default function DynamicItemPage() {
   }
 
   return (
-    <MainContainer>
+    <WhitelistGuard>
+      <MainContainer>
       <Toolbar 
         title={artwork.title} 
         showBackButton={true} 
@@ -714,5 +716,6 @@ export default function DynamicItemPage() {
 
 
     </MainContainer>
+    </WhitelistGuard>
   );
 } 

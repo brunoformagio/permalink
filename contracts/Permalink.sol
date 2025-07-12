@@ -26,6 +26,16 @@ contract Permalink is ERC1155, ERC1155Supply, Ownable, ReentrancyGuard, Pausable
     // Token counter
     uint256 private _currentTokenId = 0;
     
+    // Whitelist system
+    bool public whitelistEnabled = true; // Flag to enable/disable whitelist
+    mapping(address => bool) public interestedAddresses;
+    mapping(address => bool) public whitelistedAddresses;
+    mapping(address => bool) public adminAddresses;
+    
+    address[] public interestedAddressList;
+    address[] public whitelistedAddressList;
+    address[] public adminAddressList;
+    
     // Artist Profile Structure
     struct ArtistProfile {
         string name;
@@ -85,6 +95,14 @@ contract Permalink is ERC1155, ERC1155Supply, Ownable, ReentrancyGuard, Pausable
     
     event PlatformFeeUpdated(uint256 oldFee, uint256 newFee);
     
+    // Whitelist events
+    event AddressRegisteredInterest(address indexed addr);
+    event AddressWhitelisted(address indexed addr);
+    event AddressRemovedFromWhitelist(address indexed addr);
+    event AdminAdded(address indexed admin, address indexed addedBy);
+    event AdminRemoved(address indexed admin, address indexed removedBy);
+    event WhitelistToggled(bool enabled, address indexed toggledBy);
+    
     // Modifiers
     modifier onlyArtist(uint256 tokenId) {
         require(tokenToArtist[tokenId] == msg.sender, "Not the artist");
@@ -96,9 +114,27 @@ contract Permalink is ERC1155, ERC1155Supply, Ownable, ReentrancyGuard, Pausable
         _;
     }
     
+    modifier onlyAdmin() {
+        require(adminAddresses[msg.sender] || msg.sender == owner(), "Not an admin");
+        _;
+    }
+    
+    modifier onlyWhitelisted() {
+        if (whitelistEnabled) {
+            require(whitelistedAddresses[msg.sender] || msg.sender == owner(), "Not whitelisted");
+        }
+        _;
+    }
+    
     constructor(address initialOwner) ERC1155("") Ownable(initialOwner) {
         // Set initial URI pattern (will be overridden by dynamic generation)
         _setURI("https://api.permalink.art/metadata/{id}.json");
+        
+        // Set initial owner as admin and whitelist them
+        adminAddresses[initialOwner] = true;
+        whitelistedAddresses[initialOwner] = true;
+        adminAddressList.push(initialOwner);
+        whitelistedAddressList.push(initialOwner);
     }
     
     /**
@@ -134,7 +170,7 @@ contract Permalink is ERC1155, ERC1155Supply, Ownable, ReentrancyGuard, Pausable
         string memory _imageType,
         uint256 _price,
         uint256 _maxSupply
-    ) external whenNotPaused nonReentrant returns (uint256) {
+    ) external whenNotPaused nonReentrant onlyWhitelisted returns (uint256) {
         require(_maxSupply > 0, "Max supply must be greater than 0");
         require(bytes(_title).length > 0, "Title cannot be empty");
         require(_imageData.length > 0, "Image data cannot be empty");
@@ -183,7 +219,7 @@ contract Permalink is ERC1155, ERC1155Supply, Ownable, ReentrancyGuard, Pausable
     function purchaseArtwork(
         uint256 tokenId,
         uint256 amount
-    ) external payable whenNotPaused nonReentrant validTokenId(tokenId) {
+    ) external payable whenNotPaused nonReentrant onlyWhitelisted validTokenId(tokenId) {
         Artwork storage artwork = artworks[tokenId];
         require(artwork.isActive, "Artwork is not active");
         require(amount > 0, "Amount must be greater than 0");
@@ -313,6 +349,156 @@ contract Permalink is ERC1155, ERC1155Supply, Ownable, ReentrancyGuard, Pausable
      */
     function getCollectorTokens(address collector) external view returns (uint256[] memory) {
         return collectorTokens[collector];
+    }
+    
+    // ====== WHITELIST FUNCTIONS ======
+    
+    /**
+     * @dev Register interest in joining the platform
+     */
+    function registerInterest() external {
+        require(!interestedAddresses[msg.sender], "Already registered interest");
+        require(!whitelistedAddresses[msg.sender], "Already whitelisted");
+        
+        interestedAddresses[msg.sender] = true;
+        interestedAddressList.push(msg.sender);
+        
+        emit AddressRegisteredInterest(msg.sender);
+    }
+    
+    /**
+     * @dev Check if an address is whitelisted
+     */
+    function isWhitelisted(address addr) external view returns (bool) {
+        return whitelistedAddresses[addr];
+    }
+    
+    /**
+     * @dev Check if an address is interested
+     */
+    function isInterested(address addr) external view returns (bool) {
+        return interestedAddresses[addr];
+    }
+    
+    /**
+     * @dev Check if an address is admin
+     */
+    function isAdmin(address addr) external view returns (bool) {
+        return adminAddresses[addr];
+    }
+    
+    /**
+     * @dev Get all interested addresses
+     */
+    function getInterestedAddresses() external view returns (address[] memory) {
+        return interestedAddressList;
+    }
+    
+    /**
+     * @dev Get all whitelisted addresses
+     */
+    function getWhitelistedAddresses() external view returns (address[] memory) {
+        return whitelistedAddressList;
+    }
+    
+    /**
+     * @dev Get all admin addresses
+     */
+    function getAdminAddresses() external view returns (address[] memory) {
+        return adminAddressList;
+    }
+    
+    /**
+     * @dev Approve one or more addresses from interested to whitelisted (admin only)
+     */
+    function approveAddresses(address[] calldata addresses) external onlyAdmin {
+        for (uint256 i = 0; i < addresses.length; i++) {
+            address addr = addresses[i];
+            require(interestedAddresses[addr], "Address not interested");
+            require(!whitelistedAddresses[addr], "Address already whitelisted");
+            
+            whitelistedAddresses[addr] = true;
+            whitelistedAddressList.push(addr);
+            
+            emit AddressWhitelisted(addr);
+        }
+    }
+    
+    /**
+     * @dev Remove address from whitelist (admin only)
+     */
+    function removeFromWhitelist(address addr) external onlyAdmin {
+        require(whitelistedAddresses[addr], "Address not whitelisted");
+        require(addr != owner(), "Cannot remove owner from whitelist");
+        
+        whitelistedAddresses[addr] = false;
+        
+        // Remove from array
+        for (uint256 i = 0; i < whitelistedAddressList.length; i++) {
+            if (whitelistedAddressList[i] == addr) {
+                whitelistedAddressList[i] = whitelistedAddressList[whitelistedAddressList.length - 1];
+                whitelistedAddressList.pop();
+                break;
+            }
+        }
+        
+        emit AddressRemovedFromWhitelist(addr);
+    }
+    
+    /**
+     * @dev Add address as admin (admin only)
+     */
+    function addAdmin(address addr) external onlyAdmin {
+        require(!adminAddresses[addr], "Already an admin");
+        require(addr != address(0), "Invalid address");
+        
+        adminAddresses[addr] = true;
+        adminAddressList.push(addr);
+        
+        // Auto-whitelist new admin
+        if (!whitelistedAddresses[addr]) {
+            whitelistedAddresses[addr] = true;
+            whitelistedAddressList.push(addr);
+        }
+        
+        emit AdminAdded(addr, msg.sender);
+    }
+    
+    /**
+     * @dev Remove admin (admin only)
+     */
+    function removeAdmin(address addr) external onlyAdmin {
+        require(adminAddresses[addr], "Not an admin");
+        require(addr != owner(), "Cannot remove owner from admin");
+        require(addr != msg.sender, "Cannot remove yourself from admin");
+        
+        adminAddresses[addr] = false;
+        
+        // Remove from array
+        for (uint256 i = 0; i < adminAddressList.length; i++) {
+            if (adminAddressList[i] == addr) {
+                adminAddressList[i] = adminAddressList[adminAddressList.length - 1];
+                adminAddressList.pop();
+                break;
+            }
+        }
+        
+        emit AdminRemoved(addr, msg.sender);
+    }
+    
+    /**
+     * @dev Toggle whitelist functionality on/off (admin only)
+     */
+    function toggleWhitelist() external onlyAdmin {
+        whitelistEnabled = !whitelistEnabled;
+        emit WhitelistToggled(whitelistEnabled, msg.sender);
+    }
+    
+    /**
+     * @dev Get whitelist enabled status
+     */
+    function isWhitelistEnabled() external view returns (bool) {
+        return whitelistEnabled;
     }
     
     /**

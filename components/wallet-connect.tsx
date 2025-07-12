@@ -1,6 +1,6 @@
 "use client";
 
-import { useConnect, useActiveWallet, useDisconnect } from "thirdweb/react";
+import { useConnect, useActiveWallet, useDisconnect, useAutoConnect } from "thirdweb/react";
 import { createWallet, inAppWallet } from "thirdweb/wallets";
 import { client } from "@/lib/thirdweb";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Wallet, ExternalLink } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface WalletConnectProps {
   onConnect?: () => void;
@@ -31,6 +31,20 @@ export function WalletConnect({
   const activeWallet = useActiveWallet();
   const { disconnect } = useDisconnect();
   const [isOpen, setIsOpen] = useState(false);
+  
+  // Auto-connect to the last connected wallet on page load
+  const { data: autoConnected, isLoading: isAutoConnecting } = useAutoConnect({
+    client,
+    wallets: [
+      createWallet("io.metamask"),
+      inAppWallet({
+        auth: {
+          options: ["google"],
+        },
+      }),
+    ],
+    timeout: 15000, // 15 second timeout for auto connection
+  });
 
   const handleConnect = async (walletType: 'metamask' | 'google') => {
     try {
@@ -71,6 +85,18 @@ export function WalletConnect({
       await disconnect(activeWallet);
     }
   };
+
+  // Show loading state while auto-connecting
+  if (isAutoConnecting) {
+    return (
+      <div className="flex items-center space-x-2">
+        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+        <div className="text-sm text-muted-foreground">
+          Connecting...
+        </div>
+      </div>
+    );
+  }
 
   // If wallet is connected, show disconnect option
   if (activeWallet) {

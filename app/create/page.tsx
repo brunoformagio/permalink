@@ -14,6 +14,7 @@ import { MainContainer } from "@/components/main-container";
 import { toast } from "sonner";
 import { mintArtworkV5, getAccountFromWallet } from "@/lib/contract";
 import { validateImageFile, compressImage } from "@/lib/metadata";
+import { WhitelistGuard } from "@/components/whitelist-guard";
 
 export default function CreatePage() {
   const router = useRouter();
@@ -232,7 +233,8 @@ export default function CreatePage() {
                      currentUserAddress;
 
   return (
-    <MainContainer>
+    <WhitelistGuard>
+      <MainContainer>
       <Toolbar 
         title="Mint Artwork" 
         showBackButton={true} 
@@ -612,5 +614,6 @@ export default function CreatePage() {
         </Card>
       </div>
     </MainContainer>
+    </WhitelistGuard>
   );
 } 
