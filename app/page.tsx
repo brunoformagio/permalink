@@ -173,11 +173,11 @@ export default function Home() {
           <div className="flex items-center w-full justify-between mx-auto px-10 container">
           <div className="text-2xl lg:text-3xl flex items-center gap-2 text-[#47c89f]">
             <Image src="/permalink-logo-symbol.svg" alt="Permalink Logo" width={32} height={32} />
-            <span className="hidden sm:block"><span className="font-semibold">Perma</span>link</span>
+            <span className="hidden sm:block permalink-gradient-text"><span className="font-semibold ">Perma</span>link</span>
             </div>
           <div className="flex items-center gap-4">
             <Link href="/main">
-              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+              <Button variant="gradientOutline" size="sm" className="text-muted-foreground hover:text-foreground">
                 Access App
               </Button>
             </Link>
@@ -195,7 +195,7 @@ export default function Home() {
             />
           </div></div>
         </header>
-        <div className="bg-[url('/banner.png')] bg-contain bg-top !bg-no-repeat">
+        <div className="bg-[url('/banner.png')] md:bg-contain bg-top !bg-no-repeat">
     <div className="container-responsive  ">
       <div className="animate-fade-in p-5 lg:px-8 min-h-screen">
         {/* Header */}
@@ -288,7 +288,7 @@ export default function Home() {
                     type="submit" 
                     className="w-full"
                     disabled={isLoading || checkingStatus || isAlreadyInterested || isWhitelisted}
-                    variant={isAlreadyInterested || isWhitelisted ? "secondary" : "default"}
+                    variant={isAlreadyInterested || isWhitelisted ? "secondary" : "gradient"}
                   >
                     {getButtonContent()}
                   </Button>
@@ -309,7 +309,7 @@ export default function Home() {
             <Card>
               <CardContent className="p-6 lg:p-8">
                 <h3 className="text-xl font-semibold mb-3 flex items-center">
-                  <Sparkles className="mr-3 h-7 w-7" />
+                  <Sparkles className="mr-3 h-7 w-7 text-[var(--permalink-pink)]" />
                   Algorithmic Creation
                 </h3>
                 <p className="text-muted-foreground text-sm lg:text-base">
@@ -321,7 +321,7 @@ export default function Home() {
             <Card>
               <CardContent className="p-6 lg:p-8">
                 <h3 className="text-xl font-semibold mb-3 flex items-center">
-                  <Network className="mr-3 h-7 w-7" />
+                  <Network className="mr-3 h-7 w-7 text-[var(--permalink-pink)]" />
                   Decentralized Platform
                 </h3>
                 <p className="text-muted-foreground text-sm lg:text-base">
@@ -333,7 +333,7 @@ export default function Home() {
             <Card>
               <CardContent className="p-6 lg:p-8">
                 <h3 className="text-xl font-semibold mb-3 flex items-center">
-                  <Database className="mr-3 h-7 w-7" />
+                  <Database className="mr-3 h-7 w-7 text-[var(--permalink-pink)]" />
                   Stored Onchain
                 </h3>
                 <p className="text-muted-foreground text-sm lg:text-base">
@@ -345,7 +345,7 @@ export default function Home() {
             <Card>
               <CardContent className="p-6 lg:p-8">
                 <h3 className="text-xl font-semibold mb-3 flex items-center">
-                  <Users className="mr-3 h-7 w-7" />
+                  <Users className="mr-3 h-7 w-7 text-[var(--permalink-pink)]" />
                   Artist-First Approach
                 </h3>
                 <p className="text-muted-foreground text-sm lg:text-base">

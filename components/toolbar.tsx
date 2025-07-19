@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Menu, User } from "lucide-react";
+import { ArrowLeft, House, Menu, Plus, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -42,7 +42,7 @@ export function Toolbar({
         )}
       </div>
 
-      <h1 className="text-xl text-[#47c89f] lg:text-2xl font-bold absolute left-1/2 transform -translate-x-1/2">
+      <h1 className="text-xl text-[var(--permalink-pink)] lg:text-2xl font-bold absolute left-1/2 transform -translate-x-1/2">
         {title}
       </h1>
 
@@ -81,13 +81,13 @@ export function Toolbar({
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm">
-                    <Menu className="h-4 w-4" />
+                    <Menu className="h-4 w-4 text-[var(--permalink-pink)]" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 ">
                   <DropdownMenuItem asChild>
                     <Link href="/main" className="flex items-center">
-                      <span className="mr-2">🏠</span> Home
+                      <span className="mr-2"><House className="h-4 w-4" /></span> Home
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
@@ -98,7 +98,7 @@ export function Toolbar({
                   {isWalletConnected && (
                     <DropdownMenuItem asChild>
                       <Link href="/create" className="flex items-center">
-                        <span className="mr-2">➕</span> Create
+                        <span className="mr-2"><Plus className="h-4 w-4" /></span> Create
                       </Link>
                     </DropdownMenuItem>
                   )}
@@ -132,8 +132,8 @@ export function Toolbar({
                 }}
                 detailsButton={{
                   render: () => (
-                    <div className="w-8 h-8 rounded-full border flex items-center justify-center cursor-pointer">
-                      <User className="w-4 h-4 text-white" />
+                    <div className="w-8 h-8 rounded-full border !border-[var(--permalink-pink)] flex items-center justify-center cursor-pointer">
+                      <User className="w-4 h-4 text-[var(--permalink-pink)]" />
                     </div>
                   )
                 }}

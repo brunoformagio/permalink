@@ -34,6 +34,8 @@
   --sidebar-border: 0 0% 10%;       /* #1a1a1a */
   --sidebar-ring: 0 0% 20%;         /* #333333 */
   --radius: 0.75rem;
+  --permalink-red: #f40b32;
+  --permalink-pink: #cf145e;
 }
 
 /* Force the specific colors we need */
@@ -71,6 +73,8 @@ body {
   min-height: 100vh;
   position: relative;
 }
+
+
 
 /* Mobile-first: max width 428px */
 @media (max-width: 640px) {
@@ -310,4 +314,27 @@ body {
 
 :where([data-sonner-close-button]:focus-visible) {
   box-shadow: 0 0 0 2px hsl(var(--ring));
+}
+
+a {
+  color: var(--permalink-pink) !important;
+}
+
+
+.permalink-gradient-background {
+  background: linear-gradient(to bottom, var(--permalink-red), var(--permalink-pink));
+}
+
+.permalink-gradient-text {
+  @apply text-transparent bg-clip-text bg-gradient-to-b from-[var(--permalink-red)] to-[var(--permalink-pink)];
+}
+
+/* .permalink-gradient-text {
+  background: linear-gradient(to bottom, #f40b32, #cf145e);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent; */
+
+.permalink-gradient-svg-fill {
+  fill: linear-gradient(to bottom, var(--permalink-red), var(--permalink-pink));
 }

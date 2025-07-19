@@ -151,8 +151,8 @@ export function MainPageContent() {
                   <p className="text-muted-foreground mb-6">
                     Be the first to mint an artwork on Permalink!
                   </p>
-                  <Button asChild>
-                    <Link href="/create">Create First Artwork</Link>
+                  <Button asChild variant="gradient">
+                    <Link href="/create" className="!text-white">Create First Artwork</Link>
                   </Button>
                 </div>
               </div>

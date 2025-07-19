@@ -9,6 +9,10 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
+        gradient:
+          "bg-gradient-to-b from-[var(--permalink-red)] to-[var(--permalink-pink)] text-white hover:from-[#f40b32]/80 hover:to-[#cf145e]/80 rounded-xl px-6 py-[14px] shadow-none",
+        gradientOutline:
+          "permalink-gradient-text border-2 !border-[var(--permalink-pink)]",
         default:
           "bg-white text-black hover:bg-[#e0e0e0] hover:translate-y-[-1px] rounded-xl px-6 py-[14px] shadow-none",
         secondary:
