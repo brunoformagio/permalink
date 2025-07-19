@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, House, Menu, Plus, User } from "lucide-react";
+import { ArrowLeft, House, Menu, Plus, User, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -28,7 +28,8 @@ export function Toolbar({
   const pathname = usePathname();
   const isPathArtist = pathname === "/artist";
   const isPathMain = pathname === "/main";
-  const isPathCreate = pathname === "/create";          
+  const isPathCreate = pathname === "/create";
+  const isPathMarketplace = pathname === "/marketplace";          
 
   return (
     <div className="fixed backdrop-blur-lg left-0 w-screen top-0 bg-black/80 z-50 px-5 lg:px-8 py-4 lg:py-6 border-b border-border flex items-center justify-between">
@@ -66,6 +67,9 @@ export function Toolbar({
               <Button variant={isPathMain ? "secondary" : "ghost"} size="sm" asChild>
                 <Link href="/main">Home</Link>
               </Button>
+              <Button variant={isPathMarketplace ? "secondary" : "ghost"} size="sm" asChild>
+                <Link href="/marketplace">Marketplace</Link>
+              </Button>
               <Button variant={isPathArtist ? "secondary" : "ghost"} size="sm" asChild>
                 <Link href="/artist">Profile</Link>
               </Button>
@@ -88,6 +92,11 @@ export function Toolbar({
                   <DropdownMenuItem asChild>
                     <Link href="/main" className="flex items-center">
                       <span className="mr-2"><House className="h-4 w-4" /></span> Home
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/marketplace" className="flex items-center">
+                      <span className="mr-2"><TrendingUp className="h-4 w-4" /></span> Marketplace
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>

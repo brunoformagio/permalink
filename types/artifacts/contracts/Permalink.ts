@@ -26,7 +26,6 @@ import type {
 export interface PermalinkInterface extends Interface {
   getFunction(
     nameOrSignature:
-      | "ARTIST_ROYALTY_PERCENTAGE"
       | "MAX_PLATFORM_FEE"
       | "addAdmin"
       | "adminAddressList"
@@ -47,6 +46,7 @@ export interface PermalinkInterface extends Interface {
       | "getCollectorTokens"
       | "getCurrentTokenId"
       | "getInterestedAddresses"
+      | "getSecondaryFees"
       | "getWhitelistedAddresses"
       | "interestedAddressList"
       | "interestedAddresses"
@@ -66,10 +66,15 @@ export interface PermalinkInterface extends Interface {
       | "removeAdmin"
       | "removeFromWhitelist"
       | "renounceOwnership"
+      | "royaltyInfo"
       | "safeBatchTransferFrom"
       | "safeTransferFrom"
+      | "secondaryArtistRoyalty"
+      | "secondaryPlatformFee"
       | "setApprovalForAll"
       | "setPlatformFee"
+      | "setSecondaryFees"
+      | "setTreasuryAddress"
       | "setURI"
       | "supportsInterface"
       | "symbol"
@@ -79,6 +84,7 @@ export interface PermalinkInterface extends Interface {
       | "totalSupply()"
       | "totalSupply(uint256)"
       | "transferOwnership"
+      | "treasuryAddress"
       | "unpause"
       | "updateArtistProfile"
       | "updateArtworkPrice"
@@ -110,10 +116,6 @@ export interface PermalinkInterface extends Interface {
       | "WhitelistToggled"
   ): EventFragment;
 
-  encodeFunctionData(
-    functionFragment: "ARTIST_ROYALTY_PERCENTAGE",
-    values?: undefined
-  ): string;
   encodeFunctionData(
     functionFragment: "MAX_PLATFORM_FEE",
     values?: undefined
@@ -195,6 +197,10 @@ export interface PermalinkInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "getSecondaryFees",
+    values: [BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "getWhitelistedAddresses",
     values?: undefined
   ): string;
@@ -259,6 +265,10 @@ export interface PermalinkInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "royaltyInfo",
+    values: [BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "safeBatchTransferFrom",
     values: [
       AddressLike,
@@ -273,12 +283,28 @@ export interface PermalinkInterface extends Interface {
     values: [AddressLike, AddressLike, BigNumberish, BigNumberish, BytesLike]
   ): string;
   encodeFunctionData(
+    functionFragment: "secondaryArtistRoyalty",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "secondaryPlatformFee",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "setApprovalForAll",
     values: [AddressLike, boolean]
   ): string;
   encodeFunctionData(
     functionFragment: "setPlatformFee",
     values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setSecondaryFees",
+    values: [BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setTreasuryAddress",
+    values: [AddressLike]
   ): string;
   encodeFunctionData(functionFragment: "setURI", values: [string]): string;
   encodeFunctionData(
@@ -310,6 +336,10 @@ export interface PermalinkInterface extends Interface {
     functionFragment: "transferOwnership",
     values: [AddressLike]
   ): string;
+  encodeFunctionData(
+    functionFragment: "treasuryAddress",
+    values?: undefined
+  ): string;
   encodeFunctionData(functionFragment: "unpause", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "updateArtistProfile",
@@ -337,10 +367,6 @@ export interface PermalinkInterface extends Interface {
     values?: undefined
   ): string;
 
-  decodeFunctionResult(
-    functionFragment: "ARTIST_ROYALTY_PERCENTAGE",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(
     functionFragment: "MAX_PLATFORM_FEE",
     data: BytesLike
@@ -407,6 +433,10 @@ export interface PermalinkInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "getSecondaryFees",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "getWhitelistedAddresses",
     data: BytesLike
   ): Result;
@@ -468,6 +498,10 @@ export interface PermalinkInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "royaltyInfo",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "safeBatchTransferFrom",
     data: BytesLike
   ): Result;
@@ -476,11 +510,27 @@ export interface PermalinkInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "secondaryArtistRoyalty",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "secondaryPlatformFee",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "setApprovalForAll",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
     functionFragment: "setPlatformFee",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setSecondaryFees",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setTreasuryAddress",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "setURI", data: BytesLike): Result;
@@ -511,6 +561,10 @@ export interface PermalinkInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "transferOwnership",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "treasuryAddress",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "unpause", data: BytesLike): Result;
@@ -884,8 +938,6 @@ export interface Permalink extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
-  ARTIST_ROYALTY_PERCENTAGE: TypedContractMethod<[], [bigint], "view">;
-
   MAX_PLATFORM_FEE: TypedContractMethod<[], [bigint], "view">;
 
   addAdmin: TypedContractMethod<[addr: AddressLike], [void], "nonpayable">;
@@ -1042,6 +1094,19 @@ export interface Permalink extends BaseContract {
 
   getInterestedAddresses: TypedContractMethod<[], [string[]], "view">;
 
+  getSecondaryFees: TypedContractMethod<
+    [tokenId: BigNumberish, salePrice: BigNumberish],
+    [
+      [string, bigint, bigint, bigint] & {
+        artist: string;
+        artistRoyalty: bigint;
+        platformFee: bigint;
+        totalFees: bigint;
+      }
+    ],
+    "view"
+  >;
+
   getWhitelistedAddresses: TypedContractMethod<[], [string[]], "view">;
 
   interestedAddressList: TypedContractMethod<
@@ -1111,6 +1176,12 @@ export interface Permalink extends BaseContract {
 
   renounceOwnership: TypedContractMethod<[], [void], "nonpayable">;
 
+  royaltyInfo: TypedContractMethod<
+    [tokenId: BigNumberish, salePrice: BigNumberish],
+    [[string, bigint] & { receiver: string; royaltyAmount: bigint }],
+    "view"
+  >;
+
   safeBatchTransferFrom: TypedContractMethod<
     [
       from: AddressLike,
@@ -1135,6 +1206,10 @@ export interface Permalink extends BaseContract {
     "nonpayable"
   >;
 
+  secondaryArtistRoyalty: TypedContractMethod<[], [bigint], "view">;
+
+  secondaryPlatformFee: TypedContractMethod<[], [bigint], "view">;
+
   setApprovalForAll: TypedContractMethod<
     [operator: AddressLike, approved: boolean],
     [void],
@@ -1143,6 +1218,18 @@ export interface Permalink extends BaseContract {
 
   setPlatformFee: TypedContractMethod<
     [_platformFeePercentage: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  setSecondaryFees: TypedContractMethod<
+    [_platformFee: BigNumberish, _artistRoyalty: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  setTreasuryAddress: TypedContractMethod<
+    [_treasuryAddress: AddressLike],
     [void],
     "nonpayable"
   >;
@@ -1181,6 +1268,8 @@ export interface Permalink extends BaseContract {
     "nonpayable"
   >;
 
+  treasuryAddress: TypedContractMethod<[], [string], "view">;
+
   unpause: TypedContractMethod<[], [void], "nonpayable">;
 
   updateArtistProfile: TypedContractMethod<
@@ -1217,9 +1306,6 @@ export interface Permalink extends BaseContract {
     key: string | FunctionFragment
   ): T;
 
-  getFunction(
-    nameOrSignature: "ARTIST_ROYALTY_PERCENTAGE"
-  ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "MAX_PLATFORM_FEE"
   ): TypedContractMethod<[], [bigint], "view">;
@@ -1385,6 +1471,20 @@ export interface Permalink extends BaseContract {
     nameOrSignature: "getInterestedAddresses"
   ): TypedContractMethod<[], [string[]], "view">;
   getFunction(
+    nameOrSignature: "getSecondaryFees"
+  ): TypedContractMethod<
+    [tokenId: BigNumberish, salePrice: BigNumberish],
+    [
+      [string, bigint, bigint, bigint] & {
+        artist: string;
+        artistRoyalty: bigint;
+        platformFee: bigint;
+        totalFees: bigint;
+      }
+    ],
+    "view"
+  >;
+  getFunction(
     nameOrSignature: "getWhitelistedAddresses"
   ): TypedContractMethod<[], [string[]], "view">;
   getFunction(
@@ -1461,6 +1561,13 @@ export interface Permalink extends BaseContract {
     nameOrSignature: "renounceOwnership"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
+    nameOrSignature: "royaltyInfo"
+  ): TypedContractMethod<
+    [tokenId: BigNumberish, salePrice: BigNumberish],
+    [[string, bigint] & { receiver: string; royaltyAmount: bigint }],
+    "view"
+  >;
+  getFunction(
     nameOrSignature: "safeBatchTransferFrom"
   ): TypedContractMethod<
     [
@@ -1487,6 +1594,12 @@ export interface Permalink extends BaseContract {
     "nonpayable"
   >;
   getFunction(
+    nameOrSignature: "secondaryArtistRoyalty"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "secondaryPlatformFee"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
     nameOrSignature: "setApprovalForAll"
   ): TypedContractMethod<
     [operator: AddressLike, approved: boolean],
@@ -1500,6 +1613,16 @@ export interface Permalink extends BaseContract {
     [void],
     "nonpayable"
   >;
+  getFunction(
+    nameOrSignature: "setSecondaryFees"
+  ): TypedContractMethod<
+    [_platformFee: BigNumberish, _artistRoyalty: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "setTreasuryAddress"
+  ): TypedContractMethod<[_treasuryAddress: AddressLike], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "setURI"
   ): TypedContractMethod<[newURI: string], [void], "nonpayable">;
@@ -1527,6 +1650,9 @@ export interface Permalink extends BaseContract {
   getFunction(
     nameOrSignature: "transferOwnership"
   ): TypedContractMethod<[newOwner: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "treasuryAddress"
+  ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "unpause"
   ): TypedContractMethod<[], [void], "nonpayable">;

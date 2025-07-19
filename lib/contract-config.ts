@@ -19,6 +19,14 @@ export const getContractAddress = () => {
     : process.env.NEXT_PUBLIC_PERMALINK_CONTRACT_ADDRESS_TESTNET;
 };
 
+// Marketplace contract address configuration
+export const getMarketplaceAddress = () => {
+  const environment = getEnvironment();
+  return environment === "mainnet" 
+    ? process.env.NEXT_PUBLIC_PERMALINK_MARKETPLACE_ADDRESS_MAINNET
+    : process.env.NEXT_PUBLIC_PERMALINK_MARKETPLACE_ADDRESS_TESTNET;
+};
+
 // Chain configuration
 export const getEtherlinkChain = () => {
   const mainnet = isMainnet();

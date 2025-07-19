@@ -50,6 +50,8 @@ export function DropCard({ drop, onClick }: DropCardProps) {
                 unoptimized={true}
                 src={drop.imageUri} 
                 alt={drop.title}
+                width={100}
+                height={100}
                 className="w-full h-full object-cover"
               />
             ) : (
@@ -79,6 +81,8 @@ export function DropCard({ drop, onClick }: DropCardProps) {
                 unoptimized={true}
                 src={drop.imageUri} 
                 alt={drop.title}
+                width={100}
+                height={100}
                 className="w-full h-full object-cover"
               />
             ) : (

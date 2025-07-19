@@ -1,0 +1,12 @@
+{
+  "marketplace": {
+    "address": "0x8e5e972ee3c5eb83a14405AcAe4A6b3c8D07Ad25",
+    "deployer": "0xa2d2d9398d43a28400238662AbA4B96Fc03Dcd22",
+    "timestamp": "2025-07-19T14:19:11.636Z",
+    "network": "etherlinkTestnet",
+    "deploymentTxHash": "0x60ea61bf97ecad504845601906f5e5ca2a5e038264baa0da0f74243243b698f1",
+    "permalinkContract": "0x95a7E9152Aeb314700f6EF3827BfEE57BD73f0bd",
+    "platformTreasury": "0xa2d2d9398d43a28400238662AbA4B96Fc03Dcd22",
+    "contractName": "PermalinkMarketplace"
+  }
+}

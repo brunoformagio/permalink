@@ -21,12 +21,23 @@ import {
 } from "@/lib/contract";
 import { WhitelistGuard } from "@/components/whitelist-guard";
 import Image from "next/image";
+import { 
+  getUserListings, 
+  getUserOffers, 
+  formatTimeRemaining,
+  type Listing, 
+  type Offer 
+} from "@/lib/marketplace";
+import { TrendingUp, Tag, Gavel } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useRouter } from "next/navigation";
 
 export default function DynamicArtistPage() {
   const params = useParams();
   const address = params.address as string;
   const activeWallet = useActiveWallet();
   const currentUserAddress = activeWallet?.getAccount()?.address;
+  const router = useRouter();
   
   const [profile, setProfile] = useState<ArtistProfile | null>(null);
   const [createdArtworks, setCreatedArtworks] = useState<Artwork[]>([]);
@@ -35,6 +46,9 @@ export default function DynamicArtistPage() {
   const [error, setError] = useState<string | null>(null);
   const [copiedAddress, setCopiedAddress] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [userListings, setUserListings] = useState<Listing[]>([]);
+  const [userOffers, setUserOffers] = useState<Offer[]>([]);
+  const [marketplaceLoading, setMarketplaceLoading] = useState(false);
 
   const isOwnProfile = currentUserAddress?.toLowerCase() === address?.toLowerCase();
 
@@ -74,8 +88,28 @@ export default function DynamicArtistPage() {
     }
   }, [address]);
 
+  const loadMarketplaceData = async () => {
+    if (!address) return;
+    
+    try {
+      setMarketplaceLoading(true);
+      const [listings, offers] = await Promise.all([
+        getUserListings(address),
+        getUserOffers(address)
+      ]);
+      
+      setUserListings(listings);
+      setUserOffers(offers);
+    } catch (error) {
+      console.error("Error loading marketplace data:", error);
+    } finally {
+      setMarketplaceLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchArtistData();
+    loadMarketplaceData();
   }, [address, fetchArtistData]);
 
   const copyAddress = async () => {
@@ -336,6 +370,91 @@ export default function DynamicArtistPage() {
           </div>
         </div>
       </div>
+
+      {/* Marketplace Activity */}
+      {(userListings.length > 0 || userOffers.length > 0) && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Marketplace Activity
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="listings" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="listings">
+                  <Tag className="h-4 w-4 mr-2" />
+                  Listings ({userListings.length})
+                </TabsTrigger>
+                <TabsTrigger value="offers">
+                  <Gavel className="h-4 w-4 mr-2" />
+                  Offers ({userOffers.length})
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="listings" className="mt-4">
+                {userListings.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No active listings
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {userListings.map((listing) => (
+                      <div key={listing.listingId} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div>
+                          <div className="font-semibold">Token #{listing.tokenId}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {listing.amount} edition{listing.amount > 1 ? 's' : ''} • {listing.pricePerToken} XTZ each
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => router.push(`/item/${listing.tokenId}`)}
+                        >
+                          View
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="offers" className="mt-4">
+                {userOffers.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No active offers
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {userOffers.map((offer) => (
+                      <div key={offer.offerId} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div>
+                          <div className="font-semibold">Token #{offer.tokenId}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {offer.amount} edition{offer.amount > 1 ? 's' : ''} • {offer.pricePerToken} XTZ each
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            Expires in {formatTimeRemaining(offer.expiresAt)}
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => router.push(`/item/${offer.tokenId}`)}
+                        >
+                          View
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Copy Notification */}
       {copiedAddress && (

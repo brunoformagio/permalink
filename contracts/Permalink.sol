@@ -6,12 +6,14 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
+import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 /**
  * @title Permalink - Generative Art NFT Platform
  * @dev Multi-edition NFT contract with artist profiles and on-chain image storage
+ * @dev Implements ERC-2981 for royalty standard compliance
  */
-contract Permalink is ERC1155, ERC1155Supply, Ownable, ReentrancyGuard, Pausable {
+contract Permalink is ERC1155, ERC1155Supply, Ownable, ReentrancyGuard, Pausable, IERC2981 {
     // Contract name and symbol
     string public name = "Permalink";
     string public symbol = "PLINK";
@@ -20,8 +22,12 @@ contract Permalink is ERC1155, ERC1155Supply, Ownable, ReentrancyGuard, Pausable
     uint256 public platformFeePercentage = 250;
     uint256 public constant MAX_PLATFORM_FEE = 1000; // 10% max
     
-    // Royalty fee for artists (in basis points, 1000 = 10%)
-    uint256 public constant ARTIST_ROYALTY_PERCENTAGE = 1000;
+    // Secondary market royalties (basis points)
+    uint256 public secondaryPlatformFee = 250; // 2.5% for platform on secondary sales
+    uint256 public secondaryArtistRoyalty = 750; // 7.5% for artist on secondary sales
+    
+    // Treasury address for platform fees
+    address public treasuryAddress;
     
     // Token counter
     uint256 private _currentTokenId = 0;
@@ -126,9 +132,14 @@ contract Permalink is ERC1155, ERC1155Supply, Ownable, ReentrancyGuard, Pausable
         _;
     }
     
-    constructor(address initialOwner) ERC1155("") Ownable(initialOwner) {
+    constructor(address initialOwner, address _treasuryAddress) ERC1155("") Ownable(initialOwner) {
+        require(_treasuryAddress != address(0), "Treasury address cannot be zero");
+        
         // Set initial URI pattern (will be overridden by dynamic generation)
         _setURI("https://api.permalink.art/metadata/{id}.json");
+        
+        // Set treasury address
+        treasuryAddress = _treasuryAddress;
         
         // Set initial owner as admin and whitelist them
         adminAddresses[initialOwner] = true;
@@ -219,7 +230,7 @@ contract Permalink is ERC1155, ERC1155Supply, Ownable, ReentrancyGuard, Pausable
     function purchaseArtwork(
         uint256 tokenId,
         uint256 amount
-    ) external payable whenNotPaused nonReentrant onlyWhitelisted validTokenId(tokenId) {
+    ) external payable virtual whenNotPaused nonReentrant onlyWhitelisted validTokenId(tokenId) {
         Artwork storage artwork = artworks[tokenId];
         require(artwork.isActive, "Artwork is not active");
         require(amount > 0, "Amount must be greater than 0");
@@ -231,10 +242,9 @@ contract Permalink is ERC1155, ERC1155Supply, Ownable, ReentrancyGuard, Pausable
         uint256 totalPrice = artwork.price * amount;
         require(msg.value >= totalPrice, "Insufficient payment");
         
-        // Calculate fees
+        // Calculate fees (Primary market - no royalties, only platform fee)
         uint256 platformFee = (totalPrice * platformFeePercentage) / 10000;
-        uint256 artistRoyalty = (totalPrice * ARTIST_ROYALTY_PERCENTAGE) / 10000;
-        uint256 artistPayment = totalPrice - platformFee - artistRoyalty;
+        uint256 artistPayment = totalPrice - platformFee;
         
         // Mint tokens to buyer
         _mint(msg.sender, tokenId, amount, "");
@@ -264,6 +274,9 @@ contract Permalink is ERC1155, ERC1155Supply, Ownable, ReentrancyGuard, Pausable
         // Transfer payments
         if (artistPayment > 0) {
             payable(artwork.artist).transfer(artistPayment);
+        }
+        if (platformFee > 0) {
+            payable(treasuryAddress).transfer(platformFee);
         }
         
         // Refund excess payment
@@ -526,12 +539,20 @@ contract Permalink is ERC1155, ERC1155Supply, Ownable, ReentrancyGuard, Pausable
     }
     
     /**
-     * @dev Withdraw platform fees (owner only)
+     * @dev Withdraw accumulated platform fees to treasury (owner only)
      */
     function withdrawPlatformFees() external onlyOwner {
         uint256 balance = address(this).balance;
         require(balance > 0, "No fees to withdraw");
-        payable(owner()).transfer(balance);
+        payable(treasuryAddress).transfer(balance);
+    }
+    
+    /**
+     * @dev Update treasury address (owner only)
+     */
+    function setTreasuryAddress(address _treasuryAddress) external onlyOwner {
+        require(_treasuryAddress != address(0), "Treasury address cannot be zero");
+        treasuryAddress = _treasuryAddress;
     }
     
     /**
@@ -736,9 +757,59 @@ contract Permalink is ERC1155, ERC1155Supply, Ownable, ReentrancyGuard, Pausable
     }
     
     /**
+     * @dev ERC-2981 royalty info for secondary markets
+     */
+    function royaltyInfo(uint256 tokenId, uint256 salePrice) 
+        external 
+        view 
+        override 
+        returns (address receiver, uint256 royaltyAmount) 
+    {
+        require(tokenId <= _currentTokenId && tokenId > 0, "Invalid token ID");
+        
+        Artwork memory artwork = artworks[tokenId];
+        uint256 totalRoyalty = secondaryPlatformFee + secondaryArtistRoyalty;
+        uint256 totalRoyaltyAmount = (salePrice * totalRoyalty) / 10000;
+        
+        // Return the artist as the receiver - marketplace will handle splitting
+        return (artwork.artist, totalRoyaltyAmount);
+    }
+    
+    /**
+     * @dev Get secondary market fee breakdown for a token
+     */
+    function getSecondaryFees(uint256 tokenId, uint256 salePrice) 
+        external 
+        view 
+        returns (
+            address artist,
+            uint256 artistRoyalty,
+            uint256 platformFee,
+            uint256 totalFees
+        ) 
+    {
+        require(tokenId <= _currentTokenId && tokenId > 0, "Invalid token ID");
+        
+        Artwork memory artwork = artworks[tokenId];
+        artist = artwork.artist;
+        artistRoyalty = (salePrice * secondaryArtistRoyalty) / 10000;
+        platformFee = (salePrice * secondaryPlatformFee) / 10000;
+        totalFees = artistRoyalty + platformFee;
+    }
+    
+    /**
+     * @dev Update secondary market fees (owner only)
+     */
+    function setSecondaryFees(uint256 _platformFee, uint256 _artistRoyalty) external onlyOwner {
+        require(_platformFee + _artistRoyalty <= 2000, "Total fees cannot exceed 20%"); // Reasonable limit
+        secondaryPlatformFee = _platformFee;
+        secondaryArtistRoyalty = _artistRoyalty;
+    }
+
+    /**
      * @dev Check if contract supports interface
      */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155) returns (bool) {
-        return super.supportsInterface(interfaceId);
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155, IERC165) returns (bool) {
+        return interfaceId == type(IERC2981).interfaceId || super.supportsInterface(interfaceId);
     }
 } 

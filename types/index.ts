@@ -14,6 +14,8 @@ export type { IERC20Errors } from "./artifacts/@openzeppelin/contracts/interface
 export { IERC20Errors__factory } from "./factories/artifacts/@openzeppelin/contracts/interfaces/draft-IERC6093.sol/IERC20Errors__factory";
 export type { IERC721Errors } from "./artifacts/@openzeppelin/contracts/interfaces/draft-IERC6093.sol/IERC721Errors";
 export { IERC721Errors__factory } from "./factories/artifacts/@openzeppelin/contracts/interfaces/draft-IERC6093.sol/IERC721Errors__factory";
+export type { IERC2981 } from "./artifacts/@openzeppelin/contracts/interfaces/IERC2981";
+export { IERC2981__factory } from "./factories/artifacts/@openzeppelin/contracts/interfaces/IERC2981__factory";
 export type { ERC1155 } from "./artifacts/@openzeppelin/contracts/token/ERC1155/ERC1155";
 export { ERC1155__factory } from "./factories/artifacts/@openzeppelin/contracts/token/ERC1155/ERC1155__factory";
 export type { ERC1155Supply } from "./artifacts/@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply";
@@ -24,6 +26,8 @@ export type { IERC1155 } from "./artifacts/@openzeppelin/contracts/token/ERC1155
 export { IERC1155__factory } from "./factories/artifacts/@openzeppelin/contracts/token/ERC1155/IERC1155__factory";
 export type { IERC1155Receiver } from "./artifacts/@openzeppelin/contracts/token/ERC1155/IERC1155Receiver";
 export { IERC1155Receiver__factory } from "./factories/artifacts/@openzeppelin/contracts/token/ERC1155/IERC1155Receiver__factory";
+export type { ERC1155Holder } from "./artifacts/@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder";
+export { ERC1155Holder__factory } from "./factories/artifacts/@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder__factory";
 export type { ERC165 } from "./artifacts/@openzeppelin/contracts/utils/introspection/ERC165";
 export { ERC165__factory } from "./factories/artifacts/@openzeppelin/contracts/utils/introspection/ERC165__factory";
 export type { IERC165 } from "./artifacts/@openzeppelin/contracts/utils/introspection/IERC165";
@@ -36,6 +40,10 @@ export type { ReentrancyGuard } from "./artifacts/@openzeppelin/contracts/utils/
 export { ReentrancyGuard__factory } from "./factories/artifacts/@openzeppelin/contracts/utils/ReentrancyGuard__factory";
 export type { Permalink } from "./artifacts/contracts/Permalink";
 export { Permalink__factory } from "./factories/artifacts/contracts/Permalink__factory";
+export type { IPermalink } from "./artifacts/contracts/PermalinkMarketplace.sol/IPermalink";
+export { IPermalink__factory } from "./factories/artifacts/contracts/PermalinkMarketplace.sol/IPermalink__factory";
+export type { PermalinkMarketplace } from "./artifacts/contracts/PermalinkMarketplace.sol/PermalinkMarketplace";
+export { PermalinkMarketplace__factory } from "./factories/artifacts/contracts/PermalinkMarketplace.sol/PermalinkMarketplace__factory";
 export type { AccessControl } from "./node_modules/@openzeppelin/contracts/build/contracts/AccessControl";
 export { AccessControl__factory } from "./factories/node_modules/@openzeppelin/contracts/build/contracts/AccessControl__factory";
 export type { AccessControlDefaultAdminRules } from "./node_modules/@openzeppelin/contracts/build/contracts/AccessControlDefaultAdminRules";
@@ -66,8 +74,6 @@ export type { EnumerableMap } from "./node_modules/@openzeppelin/contracts/build
 export { EnumerableMap__factory } from "./factories/node_modules/@openzeppelin/contracts/build/contracts/EnumerableMap__factory";
 export type { ERC1155Burnable } from "./node_modules/@openzeppelin/contracts/build/contracts/ERC1155Burnable";
 export { ERC1155Burnable__factory } from "./factories/node_modules/@openzeppelin/contracts/build/contracts/ERC1155Burnable__factory";
-export type { ERC1155Holder } from "./node_modules/@openzeppelin/contracts/build/contracts/ERC1155Holder";
-export { ERC1155Holder__factory } from "./factories/node_modules/@openzeppelin/contracts/build/contracts/ERC1155Holder__factory";
 export type { ERC1155Pausable } from "./node_modules/@openzeppelin/contracts/build/contracts/ERC1155Pausable";
 export { ERC1155Pausable__factory } from "./factories/node_modules/@openzeppelin/contracts/build/contracts/ERC1155Pausable__factory";
 export type { ERC1155URIStorage } from "./node_modules/@openzeppelin/contracts/build/contracts/ERC1155URIStorage";
@@ -226,8 +232,6 @@ export type { IERC2309 } from "./node_modules/@openzeppelin/contracts/build/cont
 export { IERC2309__factory } from "./factories/node_modules/@openzeppelin/contracts/build/contracts/IERC2309__factory";
 export type { IERC2612 } from "./node_modules/@openzeppelin/contracts/build/contracts/IERC2612";
 export { IERC2612__factory } from "./factories/node_modules/@openzeppelin/contracts/build/contracts/IERC2612__factory";
-export type { IERC2981 } from "./node_modules/@openzeppelin/contracts/build/contracts/IERC2981";
-export { IERC2981__factory } from "./factories/node_modules/@openzeppelin/contracts/build/contracts/IERC2981__factory";
 export type { IERC3156FlashBorrower } from "./node_modules/@openzeppelin/contracts/build/contracts/IERC3156FlashBorrower";
 export { IERC3156FlashBorrower__factory } from "./factories/node_modules/@openzeppelin/contracts/build/contracts/IERC3156FlashBorrower__factory";
 export type { IERC3156FlashLender } from "./node_modules/@openzeppelin/contracts/build/contracts/IERC3156FlashLender";
