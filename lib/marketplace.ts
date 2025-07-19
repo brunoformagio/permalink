@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { createThirdwebClient, getContract as getThirdwebContract, prepareContractCall, sendTransaction } from "thirdweb";
+import {  getContract as getThirdwebContract, prepareContractCall, sendTransaction } from "thirdweb";
 import type { Account } from "thirdweb/wallets";
 import { getMarketplaceAddress, getEtherlinkChain } from "./contract-config";
 import { client } from "./thirdweb";
@@ -67,6 +67,7 @@ function getMarketplaceContract() {
     client,
     chain: getEtherlinkChain(),
     address: marketplaceAddress,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     abi: PermalinkMarketplaceABI.abi as any,
   });
 }
@@ -476,6 +477,7 @@ export async function approveMarketplace(
       client,
       chain: getEtherlinkChain(),
       address: nftContractAddress,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       abi: ["function setApprovalForAll(address operator, bool approved)"] as any,
     });
 

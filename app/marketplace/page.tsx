@@ -6,28 +6,20 @@ import { useRouter } from "next/navigation";
 import { MainContainer } from "@/components/main-container";
 import { Toolbar } from "@/components/toolbar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { 
   TrendingUp, 
   Search, 
-  Filter, 
   Grid3X3, 
   List,
-  ShoppingCart,
-  Clock,
-  Tag,
-  User,
   Archive,
   Loader2
 } from "lucide-react";
-import { getArtwork, getCurrentTokenId, formatAddress, formatDate } from "@/lib/contract";
+import { getArtwork, getCurrentTokenId, formatAddress } from "@/lib/contract";
 import { WhitelistGuard } from "@/components/whitelist-guard";
-import { DropCard } from "@/components/drop-card";
 import { toast } from "sonner";
 import Image from "next/image";
 

@@ -290,7 +290,7 @@ export default function CreatePage() {
               <Card>
                 <CardContent className="p-6 lg:p-8">
                   <div className="flex items-center mb-4">
-                    <Image className="mr-2 h-5 w-5" />
+                    <Image className="mr-2 h-5 w-5" aria-hidden="true" />
                     <Label htmlFor="file-upload" className="text-lg font-semibold">Upload Artwork</Label>
                   </div>
                   <Card className="border-2 border-dashed border-border hover:border-ring transition-colors">
@@ -490,7 +490,7 @@ export default function CreatePage() {
                       />
                     ) : (
                       <div className="text-center text-muted-foreground">
-                        <Image className="h-12 w-12 mx-auto mb-2" />
+                        <Image className="h-12 w-12 mx-auto mb-2" aria-label="Upload artwork preview placeholder" />
                         <div className="text-sm">Upload artwork to preview</div>
                         <div className="text-xs mt-1">Images or .zip files</div>
                       </div>

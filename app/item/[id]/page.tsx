@@ -6,12 +6,12 @@ import { useActiveWallet } from "thirdweb/react";
 import { MainContainer } from "@/components/main-container";
 import { Toolbar } from "@/components/toolbar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Heart, Share, ShoppingCart, User, Calendar, Loader2, Archive, Play, ExternalLink, Tag, Clock, TrendingUp, AlertTriangle, CheckCircle, DollarSign } from "lucide-react";
+import { Heart, Share, ShoppingCart, User, Calendar, Loader2, Archive, Play, ExternalLink, Tag, AlertTriangle, CheckCircle, DollarSign } from "lucide-react";
 import { 
   getArtwork, 
   getArtistProfile,
@@ -24,14 +24,9 @@ import {
   type ArtistProfile
 } from "@/lib/contract";
 import {
-  getTokenListings,
-  getTokenOffers,
   isMarketplaceApproved,
   approveMarketplace,
-  createListing,
-  type Listing,
-  type Offer,
-  formatTimeRemaining
+  createListing
 } from "@/lib/marketplace";
 import { getContractAddress } from "@/lib/contract-config";
 import { toast } from "sonner";
@@ -944,12 +939,6 @@ export default function DynamicItemPage() {
             currentUserAddress={currentUserAddress}
             isOwner={isOwner}
             userBalance={userBalance}
-            artwork={{
-              title: artwork.title,
-              currentSupply: artwork.currentSupply,
-              maxSupply: artwork.maxSupply,
-              isActive: artwork.isActive
-            }}
           />
         </div>
       </div>
@@ -975,7 +964,7 @@ export default function DynamicItemPage() {
                   <h4 className="font-medium text-amber-800 mb-1">What happens when you approve?</h4>
                   <p className="text-sm text-amber-700">
                     You grant the marketplace permission to transfer your NFTs when someone purchases them. 
-                    This doesn't give access to your funds or other assets.
+                    This doesn&apos;t give access to your funds or other assets.
                   </p>
                 </div>
               </div>

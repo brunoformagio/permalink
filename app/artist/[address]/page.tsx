@@ -48,7 +48,7 @@ export default function DynamicArtistPage() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [userListings, setUserListings] = useState<Listing[]>([]);
   const [userOffers, setUserOffers] = useState<Offer[]>([]);
-  const [marketplaceLoading, setMarketplaceLoading] = useState(false);
+  const [, setMarketplaceLoading] = useState(false);
 
   const isOwnProfile = currentUserAddress?.toLowerCase() === address?.toLowerCase();
 

@@ -6,9 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { 
   Tag, 
@@ -16,9 +14,6 @@ import {
   TrendingUp, 
   ShoppingCart, 
   Gavel, 
-  X,
-  ExternalLink,
-  User,
   Loader2,
   AlertTriangle
 } from "lucide-react";
@@ -27,13 +22,9 @@ import {
   getTokenOffers,
   buyFromListing,
   makeOffer,
-  acceptOffer,
-  cancelListing,
-  cancelOffer,
   isMarketplaceApproved,
   approveMarketplace,
   formatTimeRemaining,
-  formatAddress as formatMarketplaceAddress,
   type Listing,
   type Offer
 } from "@/lib/marketplace";
@@ -45,20 +36,13 @@ interface MarketplaceSectionProps {
   currentUserAddress?: string;
   isOwner: boolean;
   userBalance: number;
-  artwork: {
-    title: string;
-    currentSupply: number;
-    maxSupply: number;
-    isActive: boolean;
-  };
 }
 
 export function MarketplaceSection({ 
   tokenId, 
   currentUserAddress, 
   isOwner, 
-  userBalance, 
-  artwork 
+  userBalance 
 }: MarketplaceSectionProps) {
   const activeWallet = useActiveWallet();
 
