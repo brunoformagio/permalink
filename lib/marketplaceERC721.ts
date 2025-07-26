@@ -149,6 +149,7 @@ export async function approveMarketplaceERC721(
   account: Account,
   tokenId: number
 ): Promise<{ success: boolean; txHash?: string; error?: string }> {
+    console.log("approveMarketplaceERC721", tokenId);
   try {
     if (!MARKETPLACE_CONTRACT_ADDRESS) {
       return { success: false, error: "Marketplace address not configured" };

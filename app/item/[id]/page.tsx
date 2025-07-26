@@ -8,7 +8,7 @@ import { Toolbar } from "@/components/toolbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Share, ShoppingCart, User, Calendar, Loader2, Archive, ExternalLink, Tag, AlertTriangle, CheckCircle, DollarSign, Coins } from "lucide-react";
+import { Heart, Share, ShoppingCart, User, Calendar, Loader2, Archive, Tag, AlertTriangle } from "lucide-react";
 import { 
   getArtworkSeries,
   getIndividualArtwork,
@@ -663,7 +663,7 @@ export default function ERC721ItemPage() {
                         </div>
                         <h4 className="font-medium mb-2">No Tokens Minted Yet</h4>
                         <p className="text-muted-foreground">
-                          This series hasn't been purchased yet. Be the first to mint!
+                          This series hasn&apos;t been purchased yet. Be the first to mint!
                         </p>
                       </div>
                     )}

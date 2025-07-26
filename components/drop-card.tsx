@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Archive, Play } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { GenerativeThumbnail } from "@/components/generative-thumbnail";

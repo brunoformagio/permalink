@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, DollarSign, Gavel, AlertTriangle, CheckCircle } from "lucide-react";
+import { Loader2, DollarSign, Gavel } from "lucide-react";
 import { toast } from "sonner";
 import {
   isMarketplaceApprovedERC721,
@@ -41,7 +41,7 @@ export function SellModal({
   const [step, setStep] = useState<"input" | "approve" | "listing">("input");
   const [price, setPrice] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isApproved, setIsApproved] = useState(false);
+  const [, setIsApproved] = useState(false);
 
   const currentUserAddress = activeWallet?.getAccount()?.address;
 
@@ -162,7 +162,7 @@ export function SellModal({
             Sell NFT
           </DialogTitle>
           <DialogDescription>
-            List your NFT "{title}" on the marketplace
+            List your NFT &quot;{title}&quot; on the marketplace
           </DialogDescription>
         </DialogHeader>
 
