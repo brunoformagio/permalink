@@ -67,9 +67,6 @@ export function Toolbar({
               <Button variant={isPathMain ? "secondary" : "ghost"} size="sm" asChild>
                 <Link href="/main">Home</Link>
               </Button>
-              <Button variant={isPathMarketplace ? "secondary" : "ghost"} size="sm" asChild>
-                <Link href="/marketplace">Marketplace</Link>
-              </Button>
               <Button variant={isPathArtist ? "secondary" : "ghost"} size="sm" asChild>
                 <Link href="/artist">Profile</Link>
               </Button>
