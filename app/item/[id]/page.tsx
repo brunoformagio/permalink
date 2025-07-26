@@ -75,6 +75,7 @@ export default function ERC721ItemPage() {
   const [interactiveContent, setInteractiveContent] = useState<string | null>(null);
   const [loadingInteractive, setLoadingInteractive] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -113,7 +114,6 @@ export default function ERC721ItemPage() {
           
           // Auto-load interactive content if it's a ZIP file
           if (series.imageType === 'zip') {
-            console.log('🔍 Series view: Loading interactive content for ZIP file');
             await loadInteractiveContent(series);
           }
         } else {
@@ -149,7 +149,6 @@ export default function ERC721ItemPage() {
           
           // Auto-load interactive content if it's a ZIP file
           if (series && series.imageType === 'zip') {
-            console.log('🔍 Token view: Loading interactive content for ZIP file');
             await loadInteractiveContent(series);
           }
         }
@@ -273,23 +272,9 @@ export default function ERC721ItemPage() {
 
   const loadInteractiveContent = async (seriesInfo?: any) => {
     const series = seriesInfo || seriesData;
-    console.log('🎨 loadInteractiveContent called', { 
-      seriesInfo: !!seriesInfo, 
-      seriesData: !!seriesData, 
-      imageType: series?.imageType,
-      isSeriesView 
-    });
-    
-    if (!series || series.imageType !== 'zip') {
-      console.log('🚫 Not loading interactive content:', { 
-        hasSeries: !!series, 
-        imageType: series?.imageType 
-      });
-      return;
-    }
+    if (!series || series.imageType !== 'zip') return;
     
     try {
-      console.log('🎯 Starting interactive content load...');
       setLoadingInteractive(true);
       toast.loading("Loading interactive artwork...", { id: "loading-interactive" });
       
@@ -388,6 +373,11 @@ export default function ERC721ItemPage() {
       
       setInteractiveContent(htmlContent);
       
+      // Generate thumbnail after a delay to let the art render
+      setTimeout(() => {
+        generateThumbnail(htmlContent);
+      }, 2000);
+      
       toast.success("Interactive artwork loaded!", { id: "loading-interactive" });
       
     } catch (error) {
@@ -395,6 +385,52 @@ export default function ERC721ItemPage() {
       toast.error("Failed to load interactive artwork", { id: "loading-interactive" });
     } finally {
       setLoadingInteractive(false);
+    }
+  };
+
+  const generateThumbnail = async (htmlContent: string) => {
+    try {
+      
+      // Create a hidden iframe to render the art
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'absolute';
+      iframe.style.left = '-9999px';
+      iframe.style.width = '400px';
+      iframe.style.height = '400px';
+      iframe.sandbox.add('allow-scripts', 'allow-same-origin');
+      
+      document.body.appendChild(iframe);
+      
+      return new Promise<void>((resolve) => {
+        iframe.onload = () => {
+          setTimeout(() => {
+            try {
+              const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+              if (!iframeDoc) {
+                resolve();
+                return;
+              }
+              
+              // Look for canvas element
+              const canvas = iframeDoc.querySelector('canvas') as HTMLCanvasElement;
+              if (canvas) {
+                const dataURL = canvas.toDataURL('image/png');
+                setThumbnailPreview(dataURL);
+              }
+            } catch (error) {
+              console.error('Error capturing thumbnail:', error);
+            } finally {
+              document.body.removeChild(iframe);
+              resolve();
+            }
+          }, 3000); // Wait 3 seconds for art to render
+        };
+        
+        iframe.srcdoc = htmlContent;
+      });
+      
+    } catch (error) {
+      console.error('Error generating thumbnail:', error);
     }
   };
 

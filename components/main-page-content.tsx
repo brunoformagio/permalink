@@ -185,7 +185,8 @@ export function MainPageContent() {
                     image: featuredArtwork.description || `Series #${totalArtworks}`,
                     imageUri: '', // On-chain storage - no external URI
                     supply: `${featuredArtwork.minted}/${featuredArtwork.maxSupply} minted`,
-                    isZip: featuredArtwork.imageType === 'zip'
+                    isZip: featuredArtwork.imageType === 'zip',
+                    seriesId: totalArtworks
                   }}
                   onClick={() => navigateToItem(totalArtworks)}
                 />
@@ -210,7 +211,8 @@ export function MainPageContent() {
                           image: artwork.description || `Series #${seriesId}`,
                           imageUri: '', // On-chain storage - no external URI
                           supply: `${artwork.minted}/${artwork.maxSupply} minted`,
-                          isZip: artwork.imageType === 'zip'
+                          isZip: artwork.imageType === 'zip',
+                          seriesId: seriesId
                         }}
                         onClick={() => navigateToItem(seriesId)}
                       />

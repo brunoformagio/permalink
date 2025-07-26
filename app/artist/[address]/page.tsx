@@ -326,16 +326,17 @@ export default function DynamicArtistPage() {
                         {createdArtworks.map((artwork, index) => (
                           <DropCard 
                             key={index} 
-                            drop={{
-                              id: `series-${artwork.seriesId}`,
-                              title: artwork.title,
-                              artist: "Created",
-                              price: `${artwork.price} XTZ`,
-                              image: artwork.description || `Series #${artwork.seriesId}`,
-                              imageUri: '', // On-chain storage
-                              supply: `${artwork.minted}/${artwork.maxSupply} minted`,
-                              isZip: artwork.imageType === 'zip'
-                            }}
+                                                          drop={{
+                                id: `series-${artwork.seriesId}`,
+                                title: artwork.title,
+                                artist: "Created",
+                                price: `${artwork.price} XTZ`,
+                                image: artwork.description || `Series #${artwork.seriesId}`,
+                                imageUri: '', // On-chain storage
+                                supply: `${artwork.minted}/${artwork.maxSupply} minted`,
+                                isZip: artwork.imageType === 'zip',
+                                seriesId: artwork.seriesId
+                              }}
                             onClick={() => router.push(`/item/series-${artwork.seriesId}`)}
                           />
                         ))}
@@ -374,7 +375,8 @@ export default function DynamicArtistPage() {
                               image: token.description || `Token #${token.tokenId}`,
                               imageUri: '', // On-chain storage
                               supply: `Minted ${new Date(token.mintedAt * 1000).toLocaleDateString()}`,
-                              isZip: token.imageType === 'zip'
+                              isZip: token.imageType === 'zip',
+                              tokenId: token.tokenId
                             }}
                             onClick={() => router.push(`/item/${token.tokenId}`)}
                           />
