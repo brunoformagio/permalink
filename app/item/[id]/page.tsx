@@ -8,8 +8,7 @@ import { Toolbar } from "@/components/toolbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Heart, Share, ShoppingCart, User, Calendar, Loader2, Archive, Play, ExternalLink, Tag, AlertTriangle, CheckCircle, DollarSign, Coins } from "lucide-react";
+import { Heart, Share, ShoppingCart, User, Calendar, Loader2, Archive, ExternalLink, Tag, AlertTriangle, CheckCircle, DollarSign, Coins } from "lucide-react";
 import { 
   getArtworkSeries,
   getIndividualArtwork,
@@ -73,7 +72,6 @@ export default function ERC721ItemPage() {
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showInteractiveViewer, setShowInteractiveViewer] = useState(false);
   const [interactiveContent, setInteractiveContent] = useState<string | null>(null);
   const [loadingInteractive, setLoadingInteractive] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -112,6 +110,12 @@ export default function ERC721ItemPage() {
               await generateImagePreview(seriesTokens[0], false);
             }
           }
+          
+          // Auto-load interactive content if it's a ZIP file
+          if (series.imageType === 'zip') {
+            console.log('🔍 Series view: Loading interactive content for ZIP file');
+            await loadInteractiveContent(series);
+          }
         } else {
           // Fetch individual token data
           const token = await getIndividualArtwork(numericId);
@@ -142,6 +146,12 @@ export default function ERC721ItemPage() {
 
           // Generate image preview from token data
           await generateImagePreview(numericId, false);
+          
+          // Auto-load interactive content if it's a ZIP file
+          if (series && series.imageType === 'zip') {
+            console.log('🔍 Token view: Loading interactive content for ZIP file');
+            await loadInteractiveContent(series);
+          }
         }
 
       } catch (err) {
@@ -261,10 +271,25 @@ export default function ERC721ItemPage() {
     }
   };
 
-  const handlePlayInteractive = async () => {
-    if (!seriesData || seriesData.imageType !== 'zip') return;
+  const loadInteractiveContent = async (seriesInfo?: any) => {
+    const series = seriesInfo || seriesData;
+    console.log('🎨 loadInteractiveContent called', { 
+      seriesInfo: !!seriesInfo, 
+      seriesData: !!seriesData, 
+      imageType: series?.imageType,
+      isSeriesView 
+    });
+    
+    if (!series || series.imageType !== 'zip') {
+      console.log('🚫 Not loading interactive content:', { 
+        hasSeries: !!series, 
+        imageType: series?.imageType 
+      });
+      return;
+    }
     
     try {
+      console.log('🎯 Starting interactive content load...');
       setLoadingInteractive(true);
       toast.loading("Loading interactive artwork...", { id: "loading-interactive" });
       
@@ -272,7 +297,7 @@ export default function ERC721ItemPage() {
       let imageData = null;
       if (isSeriesView) {
         // For series view, try to get data from first minted token
-        if (seriesData && seriesData.minted > 0) {
+        if (series && series.minted > 0) {
           const seriesTokens = await getSeriesTokens(numericId);
           if (seriesTokens && seriesTokens.length > 0) {
             imageData = await getArtworkImageData(seriesTokens[0]);
@@ -362,7 +387,6 @@ export default function ERC721ItemPage() {
       htmlContent = htmlContent.replace('<head>', '<head>' + hashInjection);
       
       setInteractiveContent(htmlContent);
-      setShowInteractiveViewer(true);
       
       toast.success("Interactive artwork loaded!", { id: "loading-interactive" });
       
@@ -435,32 +459,34 @@ export default function ERC721ItemPage() {
                 <CardContent className="p-0">
                   <div className="aspect-square bg-muted flex items-center justify-center relative overflow-hidden rounded-t-lg">
                     {displayData.imageType === 'zip' ? (
-                      <div className="text-center">
-                        <div className="w-24 h-24 rounded-lg bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center mb-4">
-                          <Archive className="h-12 w-12 text-purple-600" />
+                      interactiveContent ? (
+                        <iframe
+                          srcDoc={interactiveContent}
+                          className="w-full h-full border-0"
+                          sandbox="allow-scripts allow-same-origin"
+                          title="Interactive artwork"
+                        />
+                      ) : loadingInteractive ? (
+                        <div className="text-center">
+                          <div className="w-24 h-24 rounded-lg bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center mb-4">
+                            <Loader2 className="h-12 w-12 text-purple-600 animate-spin" />
+                          </div>
+                          <div className="text-lg font-semibold text-purple-600 mb-2">Loading Interactive Artwork</div>
+                          <div className="text-sm text-muted-foreground">
+                            {isSeriesView ? "Preparing preview..." : "Loading your unique NFT..."}
+                          </div>
                         </div>
-                        <div className="text-lg font-semibold text-purple-600 mb-2">Interactive Artwork</div>
-                        <div className="text-sm text-muted-foreground mb-4">
-                          {isSeriesView ? "Click to preview the interactive experience" : "Your unique interactive NFT"}
+                      ) : (
+                        <div className="text-center">
+                          <div className="w-24 h-24 rounded-lg bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center mb-4">
+                            <Archive className="h-12 w-12 text-purple-600" />
+                          </div>
+                          <div className="text-lg font-semibold text-purple-600 mb-2">Interactive Artwork</div>
+                          <div className="text-sm text-muted-foreground">
+                            {isSeriesView ? "Preview will load automatically" : "Your unique interactive NFT"}
+                          </div>
                         </div>
-                        <Button
-                          onClick={handlePlayInteractive}
-                          disabled={loadingInteractive}
-                          className="bg-purple-600 hover:bg-purple-700 text-white"
-                        >
-                          {loadingInteractive ? (
-                            <>
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                              Loading...
-                            </>
-                          ) : (
-                            <>
-                              <Play className="h-4 w-4 mr-2" />
-                              {isSeriesView ? "Preview Artwork" : "View Your NFT"}
-                            </>
-                          )}
-                        </Button>
-                      </div>
+                      )
                     ) : imagePreview ? (
                       <Image
                         src={imagePreview}
@@ -696,34 +722,7 @@ export default function ERC721ItemPage() {
           </div>
         </div>
 
-        {/* Interactive Viewer Modal */}
-        {showInteractiveViewer && interactiveContent && (
-          <Dialog open={showInteractiveViewer} onOpenChange={setShowInteractiveViewer}>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <Archive className="h-5 w-5 text-purple-600" />
-                  Interactive Artwork
-                </DialogTitle>
-                <DialogDescription>
-                  {isSeriesView 
-                    ? "Preview of the interactive artwork. Each NFT will generate a unique variation."
-                    : "Your unique interactive NFT with deterministic generation."
-                  }
-                </DialogDescription>
-              </DialogHeader>
-              
-              <div className="relative h-[70vh] overflow-hidden rounded-lg border">
-                <iframe
-                  srcDoc={interactiveContent}
-                  className="w-full h-full border-0"
-                  sandbox="allow-scripts allow-same-origin"
-                  title="Interactive artwork"
-                />
-              </div>
-            </DialogContent>
-          </Dialog>
-        )}
+
       </MainContainer>
     </WhitelistGuard>
   );
