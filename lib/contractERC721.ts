@@ -239,6 +239,30 @@ export async function getArtworkImageData(tokenId: number) {
   }
 }
 
+/**
+ * Get artwork image data directly from series (for series that haven't been minted yet)
+ */
+export async function getSeriesImageData(seriesId: number) {
+  try {
+    const contract = getThirdwebPermalinkContract();
+    
+    // Get the series data directly from the mapping
+    const result = await readContract({
+      contract,
+      method: "function artworkSeries(uint256) view returns (uint256 seriesId, address artist, string title, string description, bytes imageData, string imageType, uint256 price, uint256 maxSupply, uint256 minted, bool isActive, uint256 createdAt)",
+      params: [BigInt(seriesId)]
+    });
+    
+    return {
+      imageData: result[4], // imageData is the 5th field (index 4)
+      imageType: result[5]  // imageType is the 6th field (index 5)
+    };
+  } catch (error) {
+    console.error("Error getting series image data:", error);
+    return null;
+  }
+}
+
 
 
 /**

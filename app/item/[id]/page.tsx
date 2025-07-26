@@ -26,7 +26,7 @@ import {
 import { toast } from "sonner";
 import { WhitelistGuard } from "@/components/whitelist-guard";
 import { MarketplaceSection } from "@/components/marketplace-section";
-import Image from "next/image";
+import { ImageDisplay } from "@/components/image-display";
 
 interface SeriesData {
   artist: string;
@@ -74,8 +74,6 @@ export default function ERC721ItemPage() {
   const [error, setError] = useState<string | null>(null);
   const [interactiveContent, setInteractiveContent] = useState<string | null>(null);
   const [loadingInteractive, setLoadingInteractive] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -103,14 +101,7 @@ export default function ERC721ItemPage() {
           const profile = await getArtistProfile(series.artist);
           setArtistProfile(profile);
 
-          // For series view, only generate preview if tokens exist
-          if (series.minted > 0) {
-            // Get the first token from this series to get image data
-            const seriesTokens = await getSeriesTokens(numericId);
-            if (seriesTokens && seriesTokens.length > 0) {
-              await generateImagePreview(seriesTokens[0], false);
-            }
-          }
+
           
           // Auto-load interactive content if it's a ZIP file
           if (series.imageType === 'zip') {
@@ -144,8 +135,7 @@ export default function ERC721ItemPage() {
           const owner = await getTokenOwner(numericId);
           setTokenOwner(owner);
 
-          // Generate image preview from token data
-          await generateImagePreview(numericId, false);
+
           
           // Auto-load interactive content if it's a ZIP file
           if (series && series.imageType === 'zip') {
@@ -164,28 +154,7 @@ export default function ERC721ItemPage() {
     fetchData();
   }, [numericId, isSeriesView, currentUserAddress]);
 
-  const generateImagePreview = async (tokenId: number, isForToken: boolean) => {
-    try {
-      const imageData = await getArtworkImageData(tokenId);
-      if (!imageData) return;
 
-      // Convert hex string to base64 for display
-      const hexString = imageData.imageData.startsWith('0x') ? imageData.imageData.slice(2) : imageData.imageData;
-      const bytes = new Uint8Array(hexString.match(/.{1,2}/g)?.map(byte => parseInt(byte, 16)) || []);
-      
-      if (imageData.imageType === 'zip') {
-        // For ZIP files, we'll show a placeholder and enable interactive viewer
-        setImagePreview(null);
-      } else {
-        // For regular images, create a data URL
-        const base64 = btoa(String.fromCharCode(...bytes));
-        const dataUrl = `data:image/${imageData.imageType};base64,${base64}`;
-        setImagePreview(dataUrl);
-      }
-    } catch (error) {
-      console.error("Error generating image preview:", error);
-    }
-  };
 
   const handlePurchaseFromSeries = async () => {
     if (!activeWallet || !seriesData) {
@@ -373,11 +342,6 @@ export default function ERC721ItemPage() {
       
       setInteractiveContent(htmlContent);
       
-      // Generate thumbnail after a delay to let the art render
-      setTimeout(() => {
-        generateThumbnail(htmlContent);
-      }, 2000);
-      
       toast.success("Interactive artwork loaded!", { id: "loading-interactive" });
       
     } catch (error) {
@@ -388,51 +352,7 @@ export default function ERC721ItemPage() {
     }
   };
 
-  const generateThumbnail = async (htmlContent: string) => {
-    try {
-      
-      // Create a hidden iframe to render the art
-      const iframe = document.createElement('iframe');
-      iframe.style.position = 'absolute';
-      iframe.style.left = '-9999px';
-      iframe.style.width = '400px';
-      iframe.style.height = '400px';
-      iframe.sandbox.add('allow-scripts', 'allow-same-origin');
-      
-      document.body.appendChild(iframe);
-      
-      return new Promise<void>((resolve) => {
-        iframe.onload = () => {
-          setTimeout(() => {
-            try {
-              const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-              if (!iframeDoc) {
-                resolve();
-                return;
-              }
-              
-              // Look for canvas element
-              const canvas = iframeDoc.querySelector('canvas') as HTMLCanvasElement;
-              if (canvas) {
-                const dataURL = canvas.toDataURL('image/png');
-                setThumbnailPreview(dataURL);
-              }
-            } catch (error) {
-              console.error('Error capturing thumbnail:', error);
-            } finally {
-              document.body.removeChild(iframe);
-              resolve();
-            }
-          }, 3000); // Wait 3 seconds for art to render
-        };
-        
-        iframe.srcdoc = htmlContent;
-      });
-      
-    } catch (error) {
-      console.error('Error generating thumbnail:', error);
-    }
-  };
+
 
   if (loading) {
     return (
@@ -523,17 +443,13 @@ export default function ERC721ItemPage() {
                           </div>
                         </div>
                       )
-                    ) : imagePreview ? (
-                      <Image
-                        src={imagePreview}
-                        alt={displayData.title}
-                        fill
-                        className="object-cover"
-                      />
                     ) : (
-                      <div className="text-center text-muted-foreground">
-                        <div className="text-sm">Loading artwork...</div>
-                      </div>
+                      <ImageDisplay
+                        tokenId={!isSeriesView ? numericId : undefined}
+                        seriesId={isSeriesView ? numericId : undefined}
+                        className="w-full h-full"
+                        alt={displayData.title}
+                      />
                     )}
                   </div>
                   

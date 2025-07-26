@@ -6,6 +6,7 @@ import { Archive, Play } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { GenerativeThumbnail } from "@/components/generative-thumbnail";
+import { ImageDisplay } from "@/components/image-display";
 
 interface Drop {
   id: string;
@@ -53,6 +54,13 @@ export function DropCard({ drop, onClick }: DropCardProps) {
                 height={100}
                 className="w-full h-full object-cover"
               />
+            ) : (drop.tokenId || drop.seriesId) ? (
+              <ImageDisplay
+                tokenId={drop.tokenId}
+                seriesId={drop.seriesId}
+                className="w-full h-full"
+                alt={drop.title}
+              />
             ) : (
               <div className="text-center p-4">
                 <div className="text-sm font-medium">{drop.title}</div>
@@ -79,6 +87,13 @@ export function DropCard({ drop, onClick }: DropCardProps) {
                 width={100}
                 height={100}
                 className="w-full h-full object-cover"
+              />
+            ) : (drop.tokenId || drop.seriesId) ? (
+              <ImageDisplay
+                tokenId={drop.tokenId}
+                seriesId={drop.seriesId}
+                className="w-full h-full"
+                alt={drop.title}
               />
             ) : (
               <div className="text-center p-4">
