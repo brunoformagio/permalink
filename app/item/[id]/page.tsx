@@ -27,6 +27,7 @@ import { toast } from "sonner";
 import { WhitelistGuard } from "@/components/whitelist-guard";
 import { MarketplaceSection } from "@/components/marketplace-section";
 import { ImageDisplay } from "@/components/image-display";
+import { SellModal } from "@/components/sell-modal";
 
 interface SeriesData {
   artist: string;
@@ -74,6 +75,7 @@ export default function ERC721ItemPage() {
   const [error, setError] = useState<string | null>(null);
   const [interactiveContent, setInteractiveContent] = useState<string | null>(null);
   const [loadingInteractive, setLoadingInteractive] = useState(false);
+  const [showSellModal, setShowSellModal] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -396,6 +398,7 @@ export default function ERC721ItemPage() {
   const isOwner = tokenData && currentUserAddress && currentUserAddress.toLowerCase() === tokenOwner?.toLowerCase();
   const isArtist = currentUserAddress && currentUserAddress.toLowerCase() === displayData.artist.toLowerCase();
   const canPurchase = isSeriesView && displayData.isActive && displayData.minted < displayData.maxSupply && !isArtist;
+  const canSell = !isSeriesView && isOwner && !isArtist; // Can sell if owns this specific token and is not the artist
 
   return (
     <WhitelistGuard>
@@ -594,7 +597,7 @@ export default function ERC721ItemPage() {
                 <Card>
                   <CardContent className="p-6">
                     <h3 className="font-semibold mb-4">Current Owner</h3>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 mb-4">
                       <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
                         {tokenOwner.slice(2, 4).toUpperCase()}
                       </div>
@@ -605,6 +608,19 @@ export default function ERC721ItemPage() {
                         )}
                       </div>
                     </div>
+                    
+                    {/* Sell Button for Owner */}
+                    {canSell && (
+                      <Button 
+                        onClick={() => setShowSellModal(true)}
+                        variant="outline"
+                        className="w-full"
+                        size="sm"
+                      >
+                        <Tag className="h-4 w-4 mr-2" />
+                        List for Sale
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
               )}
@@ -674,7 +690,16 @@ export default function ERC721ItemPage() {
           </div>
         </div>
 
-
+        {/* Sell Modal */}
+        {!isSeriesView && canSell && displayData && (
+          <SellModal
+            isOpen={showSellModal}
+            onClose={() => setShowSellModal(false)}
+            tokenId={numericId}
+            title={displayData.title}
+            imageType={displayData.imageType}
+          />
+        )}
       </MainContainer>
     </WhitelistGuard>
   );

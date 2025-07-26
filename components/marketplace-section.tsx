@@ -234,7 +234,7 @@ export function MarketplaceSection({
 
   if (loading) {
     return (
-      <Card>
+      <Card className="py-4">
         <CardContent className="p-6">
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin mr-2" />
@@ -248,7 +248,7 @@ export function MarketplaceSection({
   return (
     <div className="space-y-6">
       {/* Marketplace Overview */}
-      <Card>
+      <Card className="py-4">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5" />
@@ -327,7 +327,7 @@ export function MarketplaceSection({
 
         {/* Listings Tab */}
         <TabsContent value="listings" className="mt-6">
-          <Card>
+          <Card className="py-4">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Tag className="h-5 w-5" />
@@ -372,7 +372,7 @@ export function MarketplaceSection({
 
         {/* Offers Tab */}
         <TabsContent value="offers" className="mt-6">
-          <Card>
+          <Card className="py-4">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Gavel className="h-5 w-5" />
