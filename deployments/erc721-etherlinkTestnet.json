@@ -1,0 +1,14 @@
+{
+  "network": "etherlinkTestnet",
+  "permalink": {
+    "address": "0x32F754606FDc98fe4166E5fEFfe9a56c9c389858",
+    "deployer": "0xa2d2d9398d43a28400238662AbA4B96Fc03Dcd22",
+    "deployedAt": "2025-07-26T14:45:11.730Z"
+  },
+  "marketplace": {
+    "address": "0x2Ab6fD2e4120342046E700c75c91eB157894a843",
+    "deployer": "0xa2d2d9398d43a28400238662AbA4B96Fc03Dcd22",
+    "deployedAt": "2025-07-26T14:45:11.730Z"
+  },
+  "treasury": "0xa2d2d9398d43a28400238662AbA4B96Fc03Dcd22"
+}

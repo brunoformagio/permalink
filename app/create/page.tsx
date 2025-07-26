@@ -8,11 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { Upload, Image, FileText, DollarSign, Hash, Wallet, Archive } from "lucide-react";
+import { Upload, Image, FileText, DollarSign, Hash, Wallet, Archive, Play } from "lucide-react";
 import { Toolbar } from "@/components/toolbar";
 import { MainContainer } from "@/components/main-container";
 import { toast } from "sonner";
-import { mintArtworkV5, getAccountFromWallet } from "@/lib/contract";
+import { createArtworkSeriesV5, getAccountFromWallet } from "@/lib/contractERC721";
 import { validateImageFile, compressImage } from "@/lib/metadata";
 import { WhitelistGuard } from "@/components/whitelist-guard";
 import { createWallet, inAppWallet } from "thirdweb/wallets";
@@ -34,6 +34,11 @@ export default function CreatePage() {
   const [imageProcessing, setImageProcessing] = useState(false);
   const [isZipFile, setIsZipFile] = useState(false);
   const [minting, setMinting] = useState(false);
+  
+  // Generative art preview states
+  const [generativePreview, setGenerativePreview] = useState<string | null>(null);
+  const [loadingGenerative, setLoadingGenerative] = useState(false);
+  const [showGenerativePreview, setShowGenerativePreview] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -59,7 +64,10 @@ export default function CreatePage() {
       }
       
       setUploadedFile(file);
-      setImagePreview(null); // No preview for zip files
+      setImagePreview(null);
+      
+      // Process ZIP file for generative art preview
+      processGenerativeArt(file);
       
       toast.success(
         `Generative art package uploaded! (${(file.size / 1024).toFixed(1)} KB)`
@@ -104,6 +112,133 @@ export default function CreatePage() {
       setImagePreview(null);
     } finally {
       setImageProcessing(false);
+    }
+  };
+
+  // Get valid image type for contract
+  const getValidImageType = (file: File): string => {
+    const fileName = file.name.toLowerCase();
+    const mimeType = file.type.toLowerCase();
+    
+    // First try file extension (most reliable)
+    if (fileName.endsWith('.jpeg') || fileName.endsWith('.jpg')) return 'jpeg';
+    if (fileName.endsWith('.png')) return 'png';
+    if (fileName.endsWith('.gif')) return 'gif';
+    if (fileName.endsWith('.webp')) return 'webp';
+    if (fileName.endsWith('.svg')) return 'svg';
+    
+    // Fallback to MIME type mapping
+    const mimeToType: { [key: string]: string } = {
+      'image/jpeg': 'jpeg',
+      'image/jpg': 'jpeg', // Some browsers use this
+      'image/png': 'png',
+      'image/gif': 'gif',
+      'image/webp': 'webp',
+      'image/svg+xml': 'svg'
+    };
+    
+    if (mimeToType[mimeType]) {
+      return mimeToType[mimeType];
+    }
+    
+    // Last resort: extract from MIME type
+    const typePart = mimeType.split('/')[1];
+    if (typePart === 'jpeg' || typePart === 'jpg') return 'jpeg';
+    if (['png', 'gif', 'webp', 'svg'].includes(typePart)) return typePart;
+    
+    // Default fallback
+    console.warn('Unknown file type:', fileName, mimeType);
+    return 'jpeg'; // Safe fallback
+  };
+
+  // Process generative art ZIP file for preview
+  const processGenerativeArt = async (file: File) => {
+    try {
+      setLoadingGenerative(true);
+      toast.loading("Processing generative art...", { id: "generative-processing" });
+
+      // Load JSZip dynamically
+      const JSZip = (await import('jszip')).default;
+      
+      // Read the ZIP file
+      const arrayBuffer = await file.arrayBuffer();
+      const zip = await JSZip.loadAsync(arrayBuffer);
+      
+      // Look for index.html
+      const indexFile = zip.file('index.html');
+      if (!indexFile) {
+        toast.error("No index.html found in the ZIP package", { id: "generative-processing" });
+        return;
+      }
+      
+      // Get the HTML content
+      let htmlContent = await indexFile.async('text');
+      
+      // Process other files and create blob URLs
+      const fileUrls: { [key: string]: string } = {};
+      
+      for (const [path, zipObject] of Object.entries(zip.files)) {
+        if (!zipObject.dir && path !== 'index.html') {
+          const blob = await zipObject.async('blob');
+          fileUrls[path] = URL.createObjectURL(blob);
+        }
+      }
+      
+      // Replace relative file references with blob URLs
+      Object.keys(fileUrls).forEach(path => {
+        const regex = new RegExp(`(?:src="|href=")${path}(?=")`, 'g');
+        htmlContent = htmlContent.replace(regex, `src="${fileUrls[path]}"`);
+      });
+      
+      // Inject preview mode script (testing mode, not NFT mode)
+      const previewInjection = `
+        <script>
+          // Preview mode - enable regeneration
+          const isPreviewMode = true;
+          
+          // Generate random hash for preview
+          const previewHash = '0x' + Array.from({length: 64}, () => 
+            Math.floor(Math.random() * 16).toString(16)).join('');
+          
+          // Override URL parameters for preview
+          const originalURLSearchParams = window.URLSearchParams;
+          window.URLSearchParams = function(search) {
+            const params = new originalURLSearchParams(search);
+            params.set('hash', previewHash);
+            return params;
+          };
+          
+          // Auto-generate when loaded
+          window.addEventListener('load', function() {
+            window.postMessage({
+              type: 'SET_HASH',
+              hash: previewHash
+            }, '*');
+          });
+        </script>
+      `;
+      
+      // Insert the script before closing head tag
+      htmlContent = htmlContent.replace('</head>', previewInjection + '</head>');
+      
+      setGenerativePreview(htmlContent);
+      setShowGenerativePreview(true);
+      
+      toast.success("Generative art preview ready!", { id: "generative-processing" });
+      
+    } catch (error) {
+      console.error('Error processing generative art:', error);
+      toast.error("Failed to process generative art. Please check your ZIP file format.", { id: "generative-processing" });
+    } finally {
+      setLoadingGenerative(false);
+    }
+  };
+
+  const handleGenerativePreview = () => {
+    if (generativePreview) {
+      setShowGenerativePreview(true);
+    } else if (uploadedFile && isZipFile) {
+      processGenerativeArt(uploadedFile);
     }
   };
 
@@ -152,23 +287,22 @@ export default function CreatePage() {
       const arrayBuffer = await uploadedFile.arrayBuffer();
       const imageBytes = new Uint8Array(arrayBuffer);
       
-      // Get file extension from MIME type or filename
+      // Get file extension with robust type detection
       let imageType: string;
       if (uploadedFile.name.toLowerCase().endsWith('.zip')) {
         imageType = 'zip';
       } else {
-        const mimeType = uploadedFile.type;
-        imageType = mimeType.split('/')[1]; // "jpeg", "png", etc.
+        imageType = getValidImageType(uploadedFile);
       }
       
       console.log("Image size:", imageBytes.length, "bytes");
       console.log("Image type:", imageType);
       
-      // Show minting progress
-      toast.loading("Minting NFT with on-chain image storage...", { id: "minting-progress" });
+      // Show series creation progress
+      toast.loading("Creating artwork series with on-chain storage...", { id: "minting-progress" });
       
       // Call the contract function with raw image data
-      const result = await mintArtworkV5(
+      const result = await createArtworkSeriesV5(
         account,
         formData.title,
         formData.description,
@@ -179,14 +313,14 @@ export default function CreatePage() {
       );
 
       if (result.success) {
-        toast.success("Artwork minted successfully with on-chain storage!", { id: "minting-progress" });
+        toast.success("Artwork series created successfully with on-chain storage!", { id: "minting-progress" });
         
         // Show transaction hash
         if (result.txHash) {
           console.log("Minting transaction hash:", result.txHash);
           
           toast.success(
-            `NFT minted! Hash: ${result.txHash.slice(0, 10)}...`,
+            `Series created! Hash: ${result.txHash.slice(0, 10)}...`,
             {
               action: {
                 label: "View on Explorer",
@@ -201,11 +335,11 @@ export default function CreatePage() {
         }
         
         // Show redirect notification
-        toast.loading("Redirecting to showcase your new artwork...", {
+        toast.loading("Redirecting to showcase your new artwork series...", {
           id: "minting-redirect"
         });
         
-        // Redirect to main page where user can see their new artwork
+        // Redirect to main page where user can see their new artwork series
         setTimeout(() => {
           toast.success("Welcome to your updated gallery!", {
             id: "minting-redirect"
@@ -214,12 +348,12 @@ export default function CreatePage() {
         }, 3000);
         
       } else {
-        toast.error(result.error || "Failed to mint artwork", { id: "minting-progress" });
+        toast.error(result.error || "Failed to create artwork series", { id: "minting-progress" });
       }
       
     } catch (error) {
-      console.error("Minting error:", error);
-      toast.error("Failed to mint artwork. Please try again.", { id: "minting-progress" });
+      console.error("Series creation error:", error);
+      toast.error("Failed to create artwork series. Please try again.", { id: "minting-progress" });
     } finally {
       setMinting(false);
     }
@@ -237,8 +371,8 @@ export default function CreatePage() {
   return (
     <WhitelistGuard>
       <MainContainer>
-      <Toolbar 
-        title="Mint Artwork" 
+              <Toolbar 
+        title="Create Artwork Series" 
         showBackButton={true} 
         isWalletConnected={!!currentUserAddress} 
       />
@@ -246,9 +380,9 @@ export default function CreatePage() {
       <div className="animate-fade-in p-5 lg:px-8">
         {/* Header */}
         <div className="mb-8 lg:mb-12 text-center lg:text-left">
-          <h1 className="text-2xl lg:text-4xl font-bold mb-2 lg:mb-4">Mint on Etherlink</h1>
+          <h1 className="text-2xl lg:text-4xl font-bold mb-2 lg:mb-4">Create Series on Etherlink</h1>
           <p className="text-muted-foreground lg:text-lg">
-            Upload your artwork and mint it as an NFT with on-chain image storage.
+            Upload your artwork and create a series template for unique NFT minting.
           </p>
         </div>
 
@@ -261,7 +395,7 @@ export default function CreatePage() {
                 <div>
                   <div className="font-semibold text-orange-600">Wallet Required</div>
                   <div className="text-sm text-orange-600/80">
-                    Connect your wallet to mint artwork on the blockchain.
+                    Connect your wallet to create artwork series on the blockchain.
                   </div>
                   <ConnectButton
               client={client}
@@ -337,6 +471,7 @@ export default function CreatePage() {
                                 : "Image will be stored permanently on the blockchain"
                               }
                             </div>
+
                           </div>
                         ) : (
                           <div className="space-y-3">
@@ -475,12 +610,26 @@ export default function CreatePage() {
                         <div className="text-sm font-medium">Processing...</div>
                       </div>
                     ) : uploadedFile && isZipFile ? (
-                      <div className="text-center flex flex-col items-center justify-center h-full">
-                        <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center mb-3">
+                      <div className="text-center flex flex-col items-center justify-center h-full relative cursor-pointer group"
+                           onClick={handleGenerativePreview}>
+                        <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center mb-3 relative">
                           <Archive className="h-10 w-10 text-purple-600" />
+                          {loadingGenerative && (
+                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg">
+                              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></div>
+                            </div>
+                          )}
                         </div>
                         <div className="text-sm font-medium text-purple-600">Generative Art</div>
-                        <div className="text-xs text-muted-foreground">Interactive artwork package</div>
+                        <div className="text-xs text-muted-foreground mb-3">Interactive artwork package</div>
+                        
+                        {/* Preview overlay on hover */}
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
+                          <div className="text-white text-center">
+                            <Play className="h-8 w-8 mx-auto mb-2" />
+                            <div className="text-sm font-medium">Click to Preview</div>
+                          </div>
+                        </div>
                       </div>
                     ) : imagePreview ? (
                       <img 
@@ -496,6 +645,29 @@ export default function CreatePage() {
                       </div>
                     )}
                   </div>
+                  
+                  {/* Preview Button for Generative Art */}
+                  {uploadedFile && isZipFile && (
+                    <Button 
+                      type="button"
+                      onClick={handleGenerativePreview}
+                      disabled={loadingGenerative}
+                      className="w-full mb-4 bg-purple-600 hover:bg-purple-700 text-white"
+                    >
+                      {loadingGenerative ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <Play className="h-4 w-4 mr-2" />
+                          Preview Interactive Art
+                        </>
+                      )}
+                    </Button>
+                  )}
+                  
                   {formData.title && (
                     <div>
                       <div className="font-semibold">{formData.title}</div>
@@ -507,7 +679,7 @@ export default function CreatePage() {
                       )}
                       {formData.editions && (
                         <div className="text-sm text-muted-foreground mt-1">
-                          Max {formData.editions} edition{parseInt(formData.editions) > 1 ? 's' : ''}
+                          Series supply: {formData.editions} unique NFT{parseInt(formData.editions) > 1 ? 's' : ''}
                         </div>
                       )}
                     </div>
@@ -556,7 +728,7 @@ export default function CreatePage() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Token Standard</span>
-                      <span>ERC-1155</span>
+                      <span>ERC-721</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Network Fee</span>
@@ -622,12 +794,64 @@ export default function CreatePage() {
         <Card className="mt-6 lg:hidden">
           <CardContent className="p-4">
             <p className="text-muted-foreground text-sm text-center">
-              <strong>Ready to Mint:</strong> Your artwork will be stored permanently on-chain (max 16KB).
+              <strong>Ready to Create Series:</strong> Your artwork template will be stored permanently on-chain (max 16KB).
             </p>
           </CardContent>
         </Card>
-      </div>
-    </MainContainer>
+              </div>
+
+        {/* Generative Art Preview Modal */}
+        {showGenerativePreview && generativePreview && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-background border rounded-lg max-w-4xl max-h-[90vh] w-full overflow-hidden">
+              <div className="flex items-center justify-between p-4 border-b">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
+                    <Archive className="h-4 w-4 text-purple-600" />
+                  </div>
+                  <div>
+                    <h2 className="font-semibold">Generative Art Preview</h2>
+                    <p className="text-sm text-muted-foreground">
+                      This is how your artwork will appear to collectors
+                    </p>
+                  </div>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setShowGenerativePreview(false)}
+                >
+                  ✕
+                </Button>
+              </div>
+              
+              <div className="relative h-[70vh]">
+                <iframe
+                  srcDoc={generativePreview}
+                  className="w-full h-full border-0"
+                  sandbox="allow-scripts allow-same-origin"
+                  title="Generative art preview"
+                />
+              </div>
+              
+              <div className="p-4 border-t bg-muted/50">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-muted-foreground">
+                    💡 Each buyer will receive a unique NFT with artwork generated from their specific token ID
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setShowGenerativePreview(false)}
+                  >
+                    Close Preview
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </MainContainer>
     </WhitelistGuard>
   );
 } 

@@ -13,10 +13,10 @@ import { useActiveWallet } from "thirdweb/react";
 import { MainContainer } from "@/components/main-container";
 import { toast } from "sonner";
 import { 
-  getCurrentTokenId, 
-  getArtwork, 
-  type Artwork 
-} from "@/lib/contract";
+  getCurrentSeriesId, 
+  getArtworkSeries, 
+  type ArtworkSeries 
+} from "@/lib/contractERC721";
 
 export function MainPageContent() {
   const router = useRouter();
@@ -24,8 +24,8 @@ export function MainPageContent() {
   const activeWallet = useActiveWallet();
   const isWalletConnected = !!activeWallet;
 
-  const [featuredArtwork, setFeaturedArtwork] = useState<Artwork | null>(null);
-  const [latestArtworks, setLatestArtworks] = useState<Artwork[]>([]);
+  const [featuredArtwork, setFeaturedArtwork] = useState<ArtworkSeries | null>(null);
+  const [latestArtworks, setLatestArtworks] = useState<ArtworkSeries[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [totalArtworks, setTotalArtworks] = useState(0);
@@ -34,8 +34,8 @@ export function MainPageContent() {
     try {
       setLoading(true);
       
-      // Get the current token ID to know how many artworks exist
-      const currentId = await getCurrentTokenId();
+      // Get the current series ID to know how many artwork series exist
+      const currentId = await getCurrentSeriesId();
       setTotalArtworks(currentId);
       
       if (currentId === 0) {
@@ -44,16 +44,16 @@ export function MainPageContent() {
         return;
       }
 
-      // Fetch the latest artworks (last 5)
+      // Fetch the latest artwork series (last 5)
       const artworkPromises = [];
-      const start = Math.max(1, currentId - 4); // Get last 5 artworks
+      const start = Math.max(1, currentId - 4); // Get last 5 series
       
       for (let i = currentId; i >= start; i--) {
-        artworkPromises.push(getArtwork(i));
+        artworkPromises.push(getArtworkSeries(i));
       }
       
       const artworks = await Promise.all(artworkPromises);
-      const validArtworks = artworks.filter((artwork): artwork is Artwork => 
+      const validArtworks = artworks.filter((artwork): artwork is ArtworkSeries => 
         artwork !== null && artwork.isActive
       );
       
@@ -105,8 +105,8 @@ export function MainPageContent() {
     await fetchArtworks();
   };
 
-  const navigateToItem = (tokenId: number) => {
-    router.push(`/item/${tokenId}`);
+  const navigateToItem = (seriesId: number) => {
+    router.push(`/item/series-${seriesId}`);
   };
 
   const navigateToArtist = () => {
@@ -147,12 +147,12 @@ export function MainPageContent() {
               <div className="text-center py-12">
                 <div className="mb-4">
                   <TrendingUp className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">No Artworks Yet</h3>
+                  <h3 className="text-xl font-semibold mb-2">No Artwork Series Yet</h3>
                   <p className="text-muted-foreground mb-6">
-                    Be the first to mint an artwork on Permalink!
+                    Be the first to create an artwork series on Permalink!
                   </p>
                   <Button asChild variant="gradient">
-                    <Link href="/create" className="!text-white">Create First Artwork</Link>
+                    <Link href="/create" className="!text-white">Create First Series</Link>
                   </Button>
                 </div>
               </div>
@@ -168,7 +168,7 @@ export function MainPageContent() {
                   </h2>
                   <Button 
                     variant="ghost" 
-                    size="sm" 
+                    size="sm"
                     onClick={handleRefresh}
                     disabled={refreshing}
                   >
@@ -178,16 +178,16 @@ export function MainPageContent() {
                 </div>
                 <DropCard 
                   drop={{
-                    id: featuredArtwork.tokenId.toString(),
+                    id: `series-${totalArtworks}`,
                     title: featuredArtwork.title,
                     artist: `${featuredArtwork.artist.slice(0, 6)}...${featuredArtwork.artist.slice(-4)}`,
                     price: `${featuredArtwork.price} XTZ`,
-                    image: featuredArtwork.description || `Artwork #${featuredArtwork.tokenId}`,
-                    imageUri: featuredArtwork.imageUri,
-                    supply: `${featuredArtwork.currentSupply}/${featuredArtwork.maxSupply} minted`,
+                    image: featuredArtwork.description || `Series #${totalArtworks}`,
+                    imageUri: '', // On-chain storage - no external URI
+                    supply: `${featuredArtwork.minted}/${featuredArtwork.maxSupply} minted`,
                     isZip: featuredArtwork.imageType === 'zip'
                   }}
-                  onClick={() => navigateToItem(featuredArtwork.tokenId)}
+                  onClick={() => navigateToItem(totalArtworks)}
                 />
               </section>
             )}
@@ -197,22 +197,25 @@ export function MainPageContent() {
               <section>
                 <h2 className="text-2xl lg:text-3xl font-bold mb-4 lg:mb-6">Latest Drops</h2>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-                  {latestArtworks.map((artwork) => (
-                    <DropCard 
-                      key={artwork.tokenId}
-                      drop={{
-                        id: artwork.tokenId.toString(),
-                        title: artwork.title,
-                        artist: `${artwork.artist.slice(0, 6)}...${artwork.artist.slice(-4)}`,
-                        price: `${artwork.price} XTZ`,
-                        image: artwork.description || `Artwork #${artwork.tokenId}`,
-                        imageUri: artwork.imageUri,
-                        supply: `${artwork.currentSupply}/${artwork.maxSupply} minted`,
-                        isZip: artwork.imageType === 'zip'
-                      }}
-                      onClick={() => navigateToItem(artwork.tokenId)}
-                    />
-                  ))}
+                  {latestArtworks.map((artwork, index) => {
+                    const seriesId = totalArtworks - index - 1; // Calculate series ID based on position
+                    return (
+                      <DropCard 
+                        key={seriesId}
+                        drop={{
+                          id: `series-${seriesId}`,
+                          title: artwork.title,
+                          artist: `${artwork.artist.slice(0, 6)}...${artwork.artist.slice(-4)}`,
+                          price: `${artwork.price} XTZ`,
+                          image: artwork.description || `Series #${seriesId}`,
+                          imageUri: '', // On-chain storage - no external URI
+                          supply: `${artwork.minted}/${artwork.maxSupply} minted`,
+                          isZip: artwork.imageType === 'zip'
+                        }}
+                        onClick={() => navigateToItem(seriesId)}
+                      />
+                    );
+                  })}
                 </div>
               </section>
             )}
@@ -227,13 +230,13 @@ export function MainPageContent() {
                   <h3 className="font-semibold mb-4">Platform Stats</h3>
                   <div className="space-y-3">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Total Artworks</span>
+                      <span className="text-muted-foreground">Total Series</span>
                       <span className="font-medium">{totalArtworks}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Featured Artwork</span>
+                      <span className="text-muted-foreground">Featured Series</span>
                       <span className="font-medium">
-                        {featuredArtwork ? `#${featuredArtwork.tokenId}` : 'None'}
+                        {featuredArtwork ? `#${totalArtworks}` : 'None'}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -256,7 +259,7 @@ export function MainPageContent() {
                     <Button variant="outline" className="w-full justify-start" asChild>
                       <Link href="/create">
                         <span className="mr-2">🎨</span>
-                        Create New Art
+                        Create New Series
                       </Link>
                     </Button>
                     <Button 
@@ -296,7 +299,7 @@ export function MainPageContent() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Standard</span>
-                      <span>ERC-1155</span>
+                      <span>ERC-721</span>
                     </div>
                     <div className="text-xs text-muted-foreground pt-2 border-t">
                       All data is fetched directly from the blockchain
@@ -317,10 +320,10 @@ export function MainPageContent() {
                         </span>
                         <span className="text-xs text-muted-foreground">Latest</span>
                       </div>
-                      {latestArtworks.slice(0, 2).map((artwork) => (
-                        <div key={artwork.tokenId} className="flex justify-between items-center">
+                      {latestArtworks.slice(0, 2).map((artwork, index) => (
+                        <div key={totalArtworks - index - 1} className="flex justify-between items-center">
                           <span className="text-muted-foreground">
-                            &quot;{artwork.title}&quot; {artwork.currentSupply > 0 ? 'sold' : 'listed'}
+                            &quot;{artwork.title}&quot; {artwork.minted > 0 ? 'sold' : 'listed'}
                           </span>
                           <span className="text-xs text-muted-foreground">Recent</span>
                         </div>
