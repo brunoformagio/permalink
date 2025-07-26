@@ -21,12 +21,14 @@ import {
   formatDate,
   getArtworkImageData,
   getSeriesTokens,
-  type ArtistProfile
+  type ArtistProfile,
+  type IndividualArtwork
 } from "@/lib/contractERC721";
 import { toast } from "sonner";
 import { WhitelistGuard } from "@/components/whitelist-guard";
 import { MarketplaceSection } from "@/components/marketplace-section";
 import { ImageDisplay } from "@/components/image-display";
+import { GenerativeThumbnail } from "@/components/generative-thumbnail";
 import { SellModal } from "@/components/sell-modal";
 
 interface SeriesData {
@@ -50,6 +52,10 @@ interface TokenData {
   imageType: string;
   imageSize: number;
   mintedAt: number;
+}
+
+interface MintedToken extends IndividualArtwork {
+  tokenId: number;
 }
 
 
@@ -76,6 +82,8 @@ export default function ERC721ItemPage() {
   const [interactiveContent, setInteractiveContent] = useState<string | null>(null);
   const [loadingInteractive, setLoadingInteractive] = useState(false);
   const [showSellModal, setShowSellModal] = useState(false);
+  const [mintedTokens, setMintedTokens] = useState<MintedToken[]>([]);
+  const [loadingMintedTokens, setLoadingMintedTokens] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -109,6 +117,9 @@ export default function ERC721ItemPage() {
           if (series.imageType === 'zip') {
             await loadInteractiveContent(series);
           }
+
+          // Fetch minted tokens for series view
+          await fetchMintedTokens(numericId);
         } else {
           // Fetch individual token data
           const token = await getIndividualArtwork(numericId);
@@ -238,6 +249,40 @@ export default function ERC721ItemPage() {
       toast.error("An unexpected error occurred during purchase", { id: "purchase-tx" });
     } finally {
       setPurchasing(false);
+    }
+  };
+
+  const fetchMintedTokens = async (seriesId: number) => {
+    try {
+      setLoadingMintedTokens(true);
+      const tokenIds = await getSeriesTokens(seriesId);
+      if (!tokenIds || tokenIds.length === 0) {
+        setMintedTokens([]);
+        return;
+      }
+
+      const tokens: MintedToken[] = [];
+      for (const tokenId of tokenIds) {
+        const tokenData = await getIndividualArtwork(tokenId);
+        if (tokenData) {
+          tokens.push({
+            tokenId: tokenId,
+            seriesId: tokenData.seriesId,
+            artist: tokenData.artist,
+            title: tokenData.title,
+            description: tokenData.description,
+            imageType: tokenData.imageType,
+            imageSize: tokenData.imageSize,
+            mintedAt: tokenData.mintedAt
+          });
+        }
+      }
+      setMintedTokens(tokens);
+    } catch (error) {
+      console.error('Error fetching minted tokens:', error);
+      setMintedTokens([]);
+    } finally {
+      setLoadingMintedTokens(false);
     }
   };
 
@@ -543,6 +588,88 @@ export default function ERC721ItemPage() {
                   isTokenOwner={isTokenOwner}
                 />
               )}
+
+              {/* Minted Tokens Section for Series */}
+              {isSeriesView && (
+                <Card className="mt-6">
+                  <CardContent className="p-6">
+                    <h3 className="text-xl font-semibold mb-4">
+                      Minted Tokens ({displayData.minted})
+                    </h3>
+                    
+                    {loadingMintedTokens ? (
+                      <div className="text-center py-8">
+                        <Loader2 className="h-6 w-6 animate-spin mx-auto mb-4" />
+                        <p className="text-muted-foreground">Loading minted tokens...</p>
+                      </div>
+                    ) : mintedTokens.length > 0 ? (
+                      <>
+                        <p className="text-muted-foreground mb-6">
+                          All unique NFTs minted from this series
+                        </p>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {mintedTokens.map((token) => (
+                            <Card 
+                              key={token.tokenId}
+                              className="cursor-pointer hover:shadow-md transition-shadow"
+                              onClick={() => router.push(`/item/${token.tokenId}`)}
+                            >
+                              <CardContent className="p-4">
+                                                            <div className="aspect-square bg-muted rounded-lg mb-3 relative overflow-hidden">
+                              {token.imageType === 'zip' ? (
+                                <GenerativeThumbnail
+                                  tokenId={token.tokenId}
+                                  className="w-full h-full"
+                                  size={200}
+                                />
+                              ) : (
+                                <ImageDisplay
+                                  tokenId={token.tokenId}
+                                  className="w-full h-full"
+                                  alt={`${token.title} #${token.tokenId}`}
+                                />
+                              )}
+                            </div>
+                                
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <h4 className="font-medium truncate">
+                                      {token.title} #{token.tokenId}
+                                    </h4>
+                                    <Badge variant="secondary" className="text-xs">
+                                      {token.imageType === 'zip' ? 'Interactive' : token.imageType.toUpperCase()}
+                                    </Badge>
+                                  </div>
+                                  
+                                  <div className="text-xs text-muted-foreground">
+                                    Minted {formatDate(token.mintedAt)}
+                                  </div>
+                                  
+                                  <div className="text-xs text-muted-foreground flex items-center gap-1">
+                                    <User className="h-3 w-3" />
+                                    Artist: {formatAddress(token.artist)}
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center py-8">
+                        <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                          <Archive className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                        <h4 className="font-medium mb-2">No Tokens Minted Yet</h4>
+                        <p className="text-muted-foreground">
+                          This series hasn't been purchased yet. Be the first to mint!
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
             {/* Sidebar */}
@@ -564,6 +691,7 @@ export default function ERC721ItemPage() {
                       </div>
                       
                       <Button
+                        variant="gradient"
                         onClick={handlePurchaseFromSeries}
                         disabled={purchasing || !currentUserAddress}
                         className="w-full"
