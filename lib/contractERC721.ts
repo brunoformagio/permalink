@@ -58,6 +58,12 @@ const MARKETPLACE_CONTRACT_ADDRESS = environment === "mainnet"
   ? process.env.NEXT_PUBLIC_PERMALINK_MARKETPLACE_ADDRESS_LOCALHOST || ""
   : process.env.NEXT_PUBLIC_PERMALINK_MARKETPLACE_ADDRESS_TESTNET || "";
 
+// Debug log contract addresses
+console.log("🔧 Contract Configuration:");
+console.log("  Environment:", environment);
+console.log("  Permalink Contract:", PERMALINK_CONTRACT_ADDRESS);
+console.log("  Marketplace Contract:", MARKETPLACE_CONTRACT_ADDRESS);
+
 /**
  * Get thirdweb contract instance for Permalink ERC-721
  */
@@ -221,7 +227,35 @@ export async function getIndividualArtwork(tokenId: number) {
  */
 export async function getArtworkImageData(tokenId: number) {
   try {
+    console.log("🔍 Getting image data for token ID:", tokenId);
+    
+    // Validate token ID first
+    if (!tokenId || tokenId <= 0 || !Number.isInteger(tokenId)) {
+      console.error("❌ Invalid token ID:", tokenId);
+      return null;
+    }
+    
     const contract = getThirdwebPermalinkContract();
+    console.log("📝 Contract address:", contract.address);
+    console.log("🌐 Chain:", contract.chain.name);
+    
+    // Check if token exists by getting its owner
+    try {
+      const owner = await readContract({
+        contract,
+        method: "function ownerOf(uint256 tokenId) view returns (address)",
+        params: [BigInt(tokenId)]
+      });
+      console.log("✅ Token exists, owner:", owner);
+    } catch (ownerError) {
+      console.error("❌ Token doesn't exist or error checking owner:", {
+        tokenId,
+        error: ownerError,
+        message: ownerError instanceof Error ? ownerError.message : 'Unknown error',
+        type: typeof ownerError
+      });
+      return null;
+    }
     
     const result = await readContract({
       contract,
@@ -229,12 +263,20 @@ export async function getArtworkImageData(tokenId: number) {
       params: [BigInt(tokenId)]
     });
 
+    console.log("✅ Successfully got image data, type:", result[1]);
     return {
       imageData: result[0],
       imageType: result[1]
     };
   } catch (error) {
-    console.error("Error getting artwork image data:", error);
+    console.error("❌ Error getting artwork image data:", error);
+    console.error("❌ Error details:", {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      tokenId: tokenId,
+      contractAddress: PERMALINK_CONTRACT_ADDRESS,
+      errorType: typeof error
+    });
     return null;
   }
 }
@@ -244,6 +286,8 @@ export async function getArtworkImageData(tokenId: number) {
  */
 export async function getSeriesImageData(seriesId: number) {
   try {
+    console.log("🔍 Getting series image data for series ID:", seriesId);
+    
     const contract = getThirdwebPermalinkContract();
     
     // Get the series data directly from the mapping
@@ -253,12 +297,63 @@ export async function getSeriesImageData(seriesId: number) {
       params: [BigInt(seriesId)]
     });
     
+    console.log("✅ Successfully got series image data, type:", result[5]);
     return {
       imageData: result[4], // imageData is the 5th field (index 4)
       imageType: result[5]  // imageType is the 6th field (index 5)
     };
   } catch (error) {
-    console.error("Error getting series image data:", error);
+    console.error("❌ Error getting series image data:", error);
+    console.error("❌ Series error details:", {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      seriesId: seriesId,
+      contractAddress: PERMALINK_CONTRACT_ADDRESS
+    });
+    return null;
+  }
+}
+
+/**
+ * Get image data with automatic fallback between token and series
+ */
+export async function getImageDataWithFallback(tokenIdOrSeriesId: number, preferSeries: boolean = false) {
+  try {
+    console.log("🔄 Getting image data with fallback for ID:", tokenIdOrSeriesId);
+    
+    if (preferSeries) {
+      // Try series first
+      const seriesData = await getSeriesImageData(tokenIdOrSeriesId);
+      if (seriesData) {
+        console.log("✅ Got data from series");
+        return seriesData;
+      }
+      
+      // Fallback to token
+      const tokenData = await getArtworkImageData(tokenIdOrSeriesId);
+      if (tokenData) {
+        console.log("✅ Got data from token (fallback)");
+        return tokenData;
+      }
+    } else {
+      // Try token first
+      const tokenData = await getArtworkImageData(tokenIdOrSeriesId);
+      if (tokenData) {
+        console.log("✅ Got data from token");
+        return tokenData;
+      }
+      
+      // Fallback to series
+      const seriesData = await getSeriesImageData(tokenIdOrSeriesId);
+      if (seriesData) {
+        console.log("✅ Got data from series (fallback)");
+        return seriesData;
+      }
+    }
+    
+    console.warn("⚠️ No image data found for ID:", tokenIdOrSeriesId);
+    return null;
+  } catch (error) {
+    console.error("❌ Error in getImageDataWithFallback:", error);
     return null;
   }
 }
@@ -270,6 +365,14 @@ export async function getSeriesImageData(seriesId: number) {
  */
 export async function getSeriesTokens(seriesId: number) {
   try {
+    console.log("🔍 Getting tokens for series ID:", seriesId);
+    
+    // Validate series ID
+    if (!seriesId || seriesId <= 0 || !Number.isInteger(seriesId)) {
+      console.error("❌ Invalid series ID:", seriesId);
+      return [];
+    }
+    
     const contract = getThirdwebPermalinkContract();
     
     const result = await readContract({
@@ -278,9 +381,15 @@ export async function getSeriesTokens(seriesId: number) {
       params: [BigInt(seriesId)]
     });
 
-    return result.map(id => Number(id));
+    const tokenIds = result.map(id => Number(id)).filter(id => id > 0); // Filter out any 0 or invalid IDs
+    console.log("✅ Found series tokens:", tokenIds);
+    return tokenIds;
   } catch (error) {
-    console.error("Error getting series tokens:", error);
+    console.error("❌ Error getting series tokens:", {
+      seriesId,
+      error,
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
     return [];
   }
 }
@@ -616,5 +725,45 @@ export async function getCurrentTokenId(): Promise<number> {
   } catch (error) {
     console.error("Error getting current token ID:", error);
     return 0;
+  }
+}
+
+/**
+ * Test contract connectivity and basic functions
+ */
+export async function testContractConnectivity(): Promise<{ success: boolean; details: any }> {
+  try {
+    console.log("🧪 Testing contract connectivity...");
+    
+    const contract = getThirdwebPermalinkContract();
+    console.log("📝 Contract created:", {
+      address: contract.address,
+      chain: contract.chain.name
+    });
+    
+    // Test 1: Get current series ID (should always work if contract is deployed)
+    try {
+      const seriesId = await getCurrentSeriesId();
+      console.log("✅ Test 1 passed - Current series ID:", seriesId);
+    } catch (error) {
+      console.error("❌ Test 1 failed - getCurrentSeriesId:", error);
+      return { success: false, details: { step: "getCurrentSeriesId", error } };
+    }
+    
+    // Test 2: Get current token ID
+    try {
+      const tokenId = await getCurrentTokenId();
+      console.log("✅ Test 2 passed - Current token ID:", tokenId);
+    } catch (error) {
+      console.error("❌ Test 2 failed - getCurrentTokenId:", error);
+      return { success: false, details: { step: "getCurrentTokenId", error } };
+    }
+    
+    console.log("🎉 All connectivity tests passed!");
+    return { success: true, details: "All tests passed" };
+    
+  } catch (error) {
+    console.error("❌ Contract connectivity test failed:", error);
+    return { success: false, details: { step: "setup", error } };
   }
 } 

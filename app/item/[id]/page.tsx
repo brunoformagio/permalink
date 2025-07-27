@@ -20,6 +20,7 @@ import {
   formatAddress,
   formatDate,
   getArtworkImageData,
+  getSeriesImageData,
   getSeriesTokens,
   type ArtistProfile,
   type IndividualArtwork
@@ -299,23 +300,63 @@ export default function ERC721ItemPage() {
       if (isSeriesView) {
         // For series view, try to get data from first minted token
         if (series && series.minted > 0) {
+          console.log("🔍 Loading interactive content for series:", numericId);
           const seriesTokens = await getSeriesTokens(numericId);
+          console.log("📋 Series tokens found:", seriesTokens);
+          
           if (seriesTokens && seriesTokens.length > 0) {
-            imageData = await getArtworkImageData(seriesTokens[0]);
+            const firstTokenId = seriesTokens[0];
+            console.log("🎯 Using first token ID:", firstTokenId);
+            
+            // Validate the token ID before calling getArtworkImageData
+            if (firstTokenId && firstTokenId > 0 && Number.isInteger(firstTokenId)) {
+              imageData = await getArtworkImageData(firstTokenId);
+            } else {
+              console.error("❌ Invalid first token ID:", firstTokenId);
+              toast.error("Invalid token data found", { id: "loading-interactive" });
+              return;
+            }
+          } else {
+            console.error("❌ No valid tokens found for series:", numericId);
+            toast.error("No tokens found for this series", { id: "loading-interactive" });
+            return;
           }
         }
       } else {
         // For token view, use the actual token ID
-        imageData = await getArtworkImageData(numericId);
+        console.log("🔍 Loading interactive content for token:", numericId);
+        
+        // Validate the token ID before calling getArtworkImageData
+        if (numericId && numericId > 0 && Number.isInteger(numericId)) {
+          imageData = await getArtworkImageData(numericId);
+        } else {
+          console.error("❌ Invalid token ID:", numericId);
+          toast.error("Invalid token ID", { id: "loading-interactive" });
+          return;
+        }
       }
+      // Fallback: try to get image data directly from series if token data failed
+      if (!imageData && isSeriesView) {
+        console.log("🔄 Fallback: Trying to get image data directly from series");
+        try {
+          imageData = await getSeriesImageData(numericId);
+          if (imageData) {
+            console.log("✅ Got image data from series fallback");
+          }
+        } catch (error) {
+          console.error("❌ Series fallback also failed:", error);
+        }
+      }
+      
       if (!imageData) {
+        console.error("❌ No image data available from any source");
         toast.error("No interactive content available", { id: "loading-interactive" });
         return;
       }
       
       // Convert hex string to bytes
       const hexString = imageData.imageData.startsWith('0x') ? imageData.imageData.slice(2) : imageData.imageData;
-      const bytes = new Uint8Array(hexString.match(/.{1,2}/g)?.map(byte => parseInt(byte, 16)) || []);
+      const bytes = new Uint8Array(hexString.match(/.{1,2}/g)?.map((byte: string) => parseInt(byte, 16)) || []);
       
       // Load JSZip dynamically
       const JSZip = (await import('jszip')).default;

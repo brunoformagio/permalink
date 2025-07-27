@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Archive, Loader2 } from "lucide-react";
 import Image from "next/image";
-import { getArtworkImageData } from "@/lib/contractERC721";
+import { getArtworkImageData, getSeriesImageData } from "@/lib/contractERC721";
 
 interface GenerativeThumbnailProps {
   tokenId?: number;
@@ -35,33 +35,71 @@ export function GenerativeThumbnail({
   const generateThumbnail = async () => {
     try {
       setLoading(true);
+      setError(false);
       
-      // Get image data (use tokenId if available, otherwise try seriesId)
+      // Determine which ID to use and validate it
       const targetId = tokenId || seriesId;
-      if (!targetId) return;
-      
-      const imageData = await getArtworkImageData(targetId);
-      if (!imageData || imageData.imageType !== 'zip') {
+      if (!targetId || targetId <= 0 || !Number.isInteger(targetId)) {
+        console.error("❌ Invalid target ID for thumbnail:", targetId);
         setError(true);
         return;
       }
+      
+      
+      // Try to get image data
+      let imageData = null;
+      
+      if (tokenId) {
+        // For specific token, try token data first
+        console.log("🎯 Getting token image data for thumbnail");
+        imageData = await getArtworkImageData(tokenId);
+        
+        // If token data fails, we can't fallback for specific tokens
+        if (!imageData) {
+          console.log("❌ Failed to get token image data for thumbnail");
+          setError(true);
+          return;
+        }
+      } else if (seriesId) {
+        // For series, try series data directly (more reliable for thumbnails)
+        imageData = await getSeriesImageData(seriesId);
+        
+        if (!imageData) {
+          console.log("❌ Failed to get series image data for thumbnail");
+          setError(true);
+          return;
+        }
+      }
+      
+      if (!imageData || imageData.imageType !== 'zip') {
+        console.log("⚠️ No ZIP image data available for thumbnail");
+        setError(true);
+        return;
+      }
+      
+      console.log("✅ Got image data for thumbnail, type:", imageData.imageType);
 
       // Convert hex to bytes
       const hexString = imageData.imageData.startsWith('0x') 
         ? imageData.imageData.slice(2) 
         : imageData.imageData;
-      const bytes = new Uint8Array(hexString.match(/.{1,2}/g)?.map(byte => parseInt(byte, 16)) || []);
+      const bytes = new Uint8Array(hexString.match(/.{1,2}/g)?.map((byte: string) => parseInt(byte, 16)) || []);
       
       // Load JSZip
       const JSZip = (await import('jszip')).default;
       const zip = await JSZip.loadAsync(bytes);
       
+      console.log("📦 ZIP file loaded successfully");
+      
       // Get HTML content
       const indexFile = zip.file('index.html');
       if (!indexFile) {
+        console.error("❌ No index.html found in ZIP for thumbnail");
         setError(true);
         return;
       }
+      
+      console.log("📄 Found index.html in ZIP");
       
       let htmlContent = await indexFile.async('text');
       
@@ -83,7 +121,11 @@ export function GenerativeThumbnail({
       // Generate deterministic hash for thumbnail
       const thumbnailHash = tokenId 
         ? `0x${tokenId.toString(16).padStart(64, '0')}`
+        : seriesId 
+        ? `0x${seriesId.toString(16).padStart(64, '1')}` // Use '1' padding for series to differentiate
         : `0x${Array.from({length: 64}, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
+      
+      console.log("🎲 Using hash for thumbnail:", thumbnailHash.substring(0, 10) + "...");
       
       // Inject hash for deterministic generation
       const hashInjection = 
@@ -102,7 +144,12 @@ export function GenerativeThumbnail({
       await renderThumbnail(htmlContent);
       
     } catch (error) {
-      console.error('Error generating thumbnail:', error);
+      console.error('❌ Error generating thumbnail:', {
+        error,
+        tokenId,
+        seriesId,
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
       setError(true);
     } finally {
       setLoading(false);
@@ -125,6 +172,7 @@ export function GenerativeThumbnail({
           try {
             const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
             if (!iframeDoc) {
+              console.log("⚠️ Cannot access iframe document for thumbnail");
               resolve();
               return;
             }
@@ -133,14 +181,37 @@ export function GenerativeThumbnail({
             if (canvas) {
               const dataURL = canvas.toDataURL('image/png', 0.8);
               setThumbnail(dataURL);
+              console.log("✅ Successfully generated thumbnail");
+            } else {
+              console.log("⚠️ No canvas found in generative art for thumbnail");
             }
           } catch (error) {
-            console.error('Error capturing canvas:', error);
+            console.error('❌ Error capturing canvas for thumbnail:', error);
           } finally {
-            document.body.removeChild(iframe);
+            // Safe cleanup
+            try {
+              if (document.body.contains(iframe)) {
+                document.body.removeChild(iframe);
+              }
+            } catch (cleanupError) {
+              console.error('❌ Error cleaning up iframe:', cleanupError);
+            }
             resolve();
           }
         }, 4000); // Wait for art to fully render
+      };
+      
+      // Handle iframe load errors
+      iframe.onerror = () => {
+        console.error("❌ Iframe failed to load for thumbnail generation");
+        try {
+          if (document.body.contains(iframe)) {
+            document.body.removeChild(iframe);
+          }
+        } catch (cleanupError) {
+          console.error('❌ Error cleaning up failed iframe:', cleanupError);
+        }
+        resolve();
       };
       
       iframe.srcdoc = htmlContent;

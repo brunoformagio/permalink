@@ -776,6 +776,49 @@ export default function CreatePage() {
                 </CardContent>
               </Card>
 
+              {/* Generative Art Template */}
+              <Card>
+                <CardContent className="p-6">
+                  <h3 className="font-semibold mb-4">Generative Art Template</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Download our clean, full-screen template for creating generative/interactive artwork. No UI distractions - just pure art.
+                  </p>
+                  <div className="space-y-2">
+                    <Button 
+                      onClick={() => {
+                        const link = document.createElement('a');
+                        link.href = '/template/generative-art-template.zip';
+                        link.download = 'generative-art-template.zip';
+                        link.click();
+                      }}
+                      variant="outline" 
+                      className="w-full"
+                      size="sm"
+                    >
+                      <Archive className="h-4 w-4 mr-2" />
+                      Download Template
+                    </Button>
+                    <Button 
+                      onClick={() => {
+                        const link = document.createElement('a');
+                        link.href = '/template/README.md';
+                        link.download = 'README.md';
+                        link.click();
+                      }}
+                      variant="ghost" 
+                      className="w-full"
+                      size="sm"
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Download Guide
+                    </Button>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-2">
+                    Full-screen canvas with hash-based randomization and auto-resizing
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Tips */}
               <Card>
                 <CardContent className="p-6">
@@ -783,6 +826,7 @@ export default function CreatePage() {
                   <ul className="space-y-2 text-sm text-muted-foreground">
                     <li>• Use optimized images or .zip files (up to 16KB for on-chain storage)</li>
                     <li>• .zip files enable generative/interactive art</li>
+                    <li>• Download our template above for generative art</li>
                     <li>• Smaller files = lower gas costs</li>
                     <li>• Write detailed, engaging descriptions</li>
                     <li>• Research comparable artwork prices</li>
