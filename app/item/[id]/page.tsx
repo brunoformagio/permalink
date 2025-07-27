@@ -8,7 +8,7 @@ import { Toolbar } from "@/components/toolbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Share, ShoppingCart, User, Calendar, Loader2, Archive, Tag, AlertTriangle } from "lucide-react";
+import { Heart, Share, ShoppingCart, User, Calendar, Loader2, Archive, Tag, AlertTriangle, Link, ArrowLeft, ArrowUpRight, RefreshCcw } from "lucide-react";
 import { 
   getArtworkSeries,
   getIndividualArtwork,
@@ -449,7 +449,7 @@ export default function ERC721ItemPage() {
     <WhitelistGuard>
       <MainContainer>
         <Toolbar 
-          title={isSeriesView ? "Series" : "NFT"}
+          title={isSeriesView ? displayData.title : displayData.title + " #" + numericId}
           showBackButton={true} 
           isWalletConnected={!!currentUserAddress} 
         />
@@ -457,9 +457,23 @@ export default function ERC721ItemPage() {
         <div className="animate-fade-in p-5 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Main Content */}
-            <div className="lg:col-span-8">
-              {/* Artwork Display */}
-              <Card className="mb-6">
+            <div className="lg:col-span-8 relative ">
+              {/* Artwork Display */}                
+              
+              <div className="absolute top-3 left-3 z-[1] flex gap-2">
+                  <Badge variant="outline" className="mb-4 !border-white">
+                    Generative Preview
+                  </Badge>
+                  <Badge variant="default" className="mb-4 bg-white/75 hover:bg-white text-black cursor-pointer"
+                    onClick={() => {
+                      loadInteractiveContent();
+                    }}
+                  >
+                    Refresh Hash
+                    <RefreshCcw className="h-4 w-4 " />
+                  </Badge>
+                </div>
+              <Card className="mb-6 ">
                 <CardContent className="p-0">
                   <div className="aspect-square bg-muted flex items-center justify-center relative overflow-hidden rounded-t-lg">
                     {displayData.imageType === 'zip' ? (
@@ -520,14 +534,14 @@ export default function ERC721ItemPage() {
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-2">
+                      {/* <div className="flex items-center gap-2">
                         <Button variant="outline" size="sm">
                           <Heart className="h-4 w-4" />
                         </Button>
                         <Button variant="outline" size="sm">
                           <Share className="h-4 w-4" />
                         </Button>
-                      </div>
+                      </div> */}
                     </div>
 
                     {/* Series/Token Info */}
@@ -774,6 +788,13 @@ export default function ERC721ItemPage() {
                     </div>
                   </CardContent>
                 </Card>
+              )}
+
+              {!isSeriesView && (
+                <Button variant="outline" className="w-full" onClick={() => router.push("/item/series-" + (tokenData?.seriesId || numericId))}>
+                  Go to the series page
+                  <ArrowUpRight className="h-4 w-4 ml-2" />
+                </Button>
               )}
 
               {/* Technical Details */}

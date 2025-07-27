@@ -84,45 +84,82 @@ export function WhitelistGuard({ children, fallback }: WhitelistGuardProps) {
 
   if (!account && whitelistEnabled) {
     return (
-      fallback || (
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold mb-4">Wallet Required</h2>
-            <p className="text-muted-foreground mb-6">
-              Please connect your wallet to access this page.
-            </p>
-            <ConnectButton
-              client={client}
-              wallets={[
-                createWallet("io.metamask"),
-                inAppWallet({
-                  auth: {
-                    options: ["google"],
-                  },
-                }),
-              ]}
-              theme="dark"
-            />
-          </div>
-        </div>
-      )
+      fallback || <WalletRequired />
     );
   }
 
   if (isWhitelisted === false) {
     return (
-      fallback || (
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold mb-4">Access Restricted</h2>
-            <p className="text-muted-foreground mb-6">
-              You are not whitelisted. Please register interest on the landing page.
-            </p>
-          </div>
-        </div>
-      )
+      fallback || <WhitelistGuardFallback />
     );
   }
 
   return <>{children}</>;
 } 
+
+
+const WhitelistGuardFallback = () => {
+  const [showConnectButton, setShowConnectButton] = useState(false);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setShowConnectButton(true);
+    }, 4000);
+  }, []);
+
+  if (!showConnectButton) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold mb-4">Access Restricted</h2>
+        <p className="text-muted-foreground mb-6">
+          You are not whitelisted. Please register interest on the landing page.
+        </p>
+      </div>
+    </div>
+  );
+};
+
+
+const WalletRequired = () => {
+  const [showConnectButton, setShowConnectButton] = useState(false);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setShowConnectButton(true);
+    }, 1000);
+  }, []);
+
+  if (!showConnectButton) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="text-center">
+        <ConnectButton
+          client={client}
+          wallets={[
+            createWallet("io.metamask"),
+            inAppWallet({
+              auth: {
+                options: ["google"],
+              },
+            }),
+          ]}
+          theme="dark"
+        />
+      </div>
+    </div>
+  );
+};
