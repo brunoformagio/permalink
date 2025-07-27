@@ -8,7 +8,7 @@ import { Toolbar } from "@/components/toolbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Share, ShoppingCart, User, Calendar, Loader2, Archive, Tag, AlertTriangle, Link, ArrowLeft, ArrowUpRight, RefreshCcw } from "lucide-react";
+import { ShoppingCart, User, Calendar, Loader2, Archive, Tag, AlertTriangle, ArrowUpRight, RefreshCcw } from "lucide-react";
 import { 
   getArtworkSeries,
   getIndividualArtwork,

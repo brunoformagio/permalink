@@ -39,7 +39,6 @@ export default function CreatePage() {
   const [generativePreview, setGenerativePreview] = useState<string | null>(null);
   const [loadingGenerative, setLoadingGenerative] = useState(false);
   const [showGenerativePreview, setShowGenerativePreview] = useState(false);
-  const [generativePreviewKey, setGenerativePreviewKey] = useState(0);
   const [currentPreviewHash, setCurrentPreviewHash] = useState<string>('');
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
