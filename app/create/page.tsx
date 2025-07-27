@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { Upload, Image, FileText, DollarSign, Hash, Wallet, Archive, Play } from "lucide-react";
+import { Upload, Image, FileText, DollarSign, Hash, Wallet, Archive, Play, RefreshCcw } from "lucide-react";
 import { Toolbar } from "@/components/toolbar";
 import { MainContainer } from "@/components/main-container";
 import { toast } from "sonner";
@@ -39,7 +39,8 @@ export default function CreatePage() {
   const [generativePreview, setGenerativePreview] = useState<string | null>(null);
   const [loadingGenerative, setLoadingGenerative] = useState(false);
   const [showGenerativePreview, setShowGenerativePreview] = useState(false);
-
+  const [generativePreviewKey, setGenerativePreviewKey] = useState(0);
+  const [currentPreviewHash, setCurrentPreviewHash] = useState<string>('');
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -151,8 +152,23 @@ export default function CreatePage() {
     return 'jpeg'; // Safe fallback
   };
 
+  // Generate a new hash for preview
+  const generateNewHash = () => {
+    return '0x' + Array.from({length: 64}, () => 
+      Math.floor(Math.random() * 16).toString(16)).join('');
+  };
+
+  // Regenerate hash and update preview
+  const regeneratePreviewHash = async () => {
+    if (!uploadedFile || !isZipFile) return;
+    
+    const newHash = generateNewHash();
+    setCurrentPreviewHash(newHash);
+    await processGenerativeArt(uploadedFile, newHash);
+  };
+
   // Process generative art ZIP file for preview
-  const processGenerativeArt = async (file: File) => {
+  const processGenerativeArt = async (file: File, customHash?: string) => {
     try {
       setLoadingGenerative(true);
       toast.loading("Processing generative art...", { id: "generative-processing" });
@@ -190,36 +206,46 @@ export default function CreatePage() {
         htmlContent = htmlContent.replace(regex, `src="${fileUrls[path]}"`);
       });
       
-      // Inject preview mode script (testing mode, not NFT mode)
-      const previewInjection = `
-        <script>
-          // Preview mode - enable regeneration
-          const isPreviewMode = true;
-          
-          // Generate random hash for preview
-          const previewHash = '0x' + Array.from({length: 64}, () => 
-            Math.floor(Math.random() * 16).toString(16)).join('');
-          
-          // Override URL parameters for preview
-          const originalURLSearchParams = window.URLSearchParams;
-          window.URLSearchParams = function(search) {
-            const params = new originalURLSearchParams(search);
-            params.set('hash', previewHash);
-            return params;
-          };
-          
-          // Auto-generate when loaded
-          window.addEventListener('load', function() {
-            window.postMessage({
-              type: 'SET_HASH',
-              hash: previewHash
-            }, '*');
-          });
-        </script>
-      `;
+      // Generate or use provided hash
+      const previewHash = customHash || generateNewHash();
+      if (!customHash) {
+        setCurrentPreviewHash(previewHash);
+      }
+
+      // Inject hash using the same pattern as the item page
+      const hashInjection = 
+        '<script>' +
+        '// EARLY INJECTION: Set hash before any other scripts run\n' +
+        'console.log("🔗 Permalink Platform: Injecting preview hash:", "' + previewHash.substring(0, 10) + '...");\n' +
+        'window.PERMALINK_TOKEN_HASH = "' + previewHash + '";\n' +
+        'window.PERMALINK_IS_NFT_MODE = false;\n' +
+        '\n' +
+        '// Override URLSearchParams to always return our hash\n' +
+        'const OriginalURLSearchParams = window.URLSearchParams;\n' +
+        'window.URLSearchParams = function(search) {\n' +
+        '  const params = new OriginalURLSearchParams("hash=' + previewHash + '");\n' +
+        '  return params;\n' +
+        '};\n' +
+        '\n' +
+        '// Override window.location.search\n' +
+        'Object.defineProperty(window.location, "search", {\n' +
+        '  value: "?hash=' + previewHash + '",\n' +
+        '  writable: false\n' +
+        '});\n' +
+        '\n' +
+        '// Send postMessage as additional method\n' +
+        'setTimeout(function() {\n' +
+        '  console.log("🔗 Permalink Platform: Sending SET_HASH message");\n' +
+        '  window.postMessage({\n' +
+        '    type: "SET_HASH",\n' +
+        '    hash: "' + previewHash + '",\n' +
+        '    isNFTMode: false\n' +
+        '  }, "*");\n' +
+        '}, 50);\n' +
+        '</script>';
       
       // Insert the script before closing head tag
-      htmlContent = htmlContent.replace('</head>', previewInjection + '</head>');
+      htmlContent = htmlContent.replace('</head>', hashInjection + '</head>');
       
       setGenerativePreview(htmlContent);
       setShowGenerativePreview(true);
@@ -803,7 +829,7 @@ export default function CreatePage() {
         {/* Generative Art Preview Modal */}
         {showGenerativePreview && generativePreview && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-background border rounded-lg max-w-4xl max-h-[90vh] w-full overflow-hidden">
+            <Card className="border rounded-lg max-w-4xl max-h-[90vh] w-full gap-0 overflow-hidden">
               <div className="flex items-center justify-between p-4 border-b">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
@@ -826,6 +852,14 @@ export default function CreatePage() {
               </div>
               
               <div className="relative h-[70vh]">
+                {/*Regenerate Hash button */}
+                <Button variant="outline" className="absolute top-5 left-5" size="sm" onClick={() => {
+                  regeneratePreviewHash();
+                }}>
+                  Regenerate Preview
+                  <RefreshCcw className="h-4 w-4 ml-2" />
+                </Button>
+
                 <iframe
                   srcDoc={generativePreview}
                   className="w-full h-full border-0"
@@ -838,6 +872,11 @@ export default function CreatePage() {
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-muted-foreground">
                     💡 Each buyer will receive a unique NFT with artwork generated from their specific token ID
+                    {currentPreviewHash && (
+                      <div className="mt-1 font-mono text-xs">
+                        Current hash: {currentPreviewHash.substring(0, 10)}...{currentPreviewHash.substring(-6)}
+                      </div>
+                    )}
                   </div>
                   <Button 
                     variant="outline" 
@@ -848,7 +887,7 @@ export default function CreatePage() {
                   </Button>
                 </div>
               </div>
-            </div>
+            </Card>
           </div>
         )}
       </MainContainer>
