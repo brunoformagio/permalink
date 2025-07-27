@@ -29,7 +29,7 @@ export function Toolbar({
   const isPathArtist = pathname === "/artist";
   const isPathMain = pathname === "/main";
   const isPathCreate = pathname === "/create";
-  const isPathMarketplace = pathname === "/marketplace";          
+  // const isPathMarketplace = pathname === "/marketplace";          
 
   return (
     <div className="fixed backdrop-blur-lg left-0 w-screen top-0 bg-black/80 z-50 px-5 lg:px-8 py-4 lg:py-6 border-b border-border flex items-center justify-between">

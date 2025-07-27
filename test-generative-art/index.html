@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmic Network</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+        }
+        
+        #canvas-container {
+            border: 2px solid #333;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0, 150, 255, 0.3);
+            position: relative;
+        }
+        
+        #canvas {
+            display: block;
+        }
+        
+        #info {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            color: #00ff88;
+            font-size: 11px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #00ff88;
+            font-weight: bold;
+            text-shadow: 0 0 5px #00ff88;
+        }
+        
+        #controls {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            display: flex;
+            gap: 8px;
+        }
+        
+        button {
+            background: linear-gradient(145deg, #2a2a3e, #1a1a2e);
+            color: #00ff88;
+            border: 1px solid #00ff88;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 3px #00ff88;
+        }
+        
+        button:hover {
+            background: linear-gradient(145deg, #3a3a4e, #2a2a3e);
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+            transform: translateY(-1px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        #traits {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            color: #00ff88;
+            font-size: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #00ff88;
+            text-align: right;
+            max-width: 150px;
+        }
+
+        /* Hide developer info for NFTs */
+        .nft-mode #developer-info {
+            display: none;
+        }
+        
+        /* Show user-friendly version */
+        .nft-mode #traits {
+            display: block;
+        }
+        
+        .preview-mode #traits {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container">
+        <canvas id="canvas" width="500" height="500"></canvas>
+        
+        <div id="info">
+            <div id="artwork-title">🌌 COSMIC NETWORK</div>
+            <div id="artwork-subtitle">Your unique digital artwork</div>
+        </div>
+        
+        <div id="traits">
+            <div id="trait-list">Loading traits...</div>
+        </div>
+        
+        <div id="controls">
+            <button onclick="toggleAnimation()">⏯️ <span id="anim-text">Pause</span></button>
+            <button onclick="saveImage()">💾 Save Image</button>
+            <button onclick="regenerate()" id="regenerate-btn">🔄 Regenerate</button>
+        </div>
+    </div>
+
+    <script src="sketch.js"></script>
+</body>
+</html> 
