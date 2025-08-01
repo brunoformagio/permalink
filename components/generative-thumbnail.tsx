@@ -222,7 +222,7 @@ export function GenerativeThumbnail({
     return (
       <div className={`${className} bg-muted flex items-center justify-center`}>
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-purple-600 mx-auto mb-2" />
+          <Loader2 className="h-8 w-8 animate-spin text-[var(--permalink-pink)] mx-auto mb-2" />
           <div className="text-xs text-muted-foreground">Generating...</div>
         </div>
       </div>
@@ -234,9 +234,9 @@ export function GenerativeThumbnail({
       <div className={`${className} bg-muted flex items-center justify-center`}>
         <div className="text-center">
           <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center mx-auto mb-2">
-            <Archive className="h-6 w-6 text-purple-600" />
+            <Archive className="h-6 w-6 text-[var(--permalink-pink)]" />
           </div>
-          <div className="text-xs text-purple-600 font-medium">Generative Art</div>
+          <div className="text-xs text-[var(--permalink-pink)] font-medium">Generative Art</div>
         </div>
       </div>
     );

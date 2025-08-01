@@ -475,7 +475,7 @@ export default function CreatePage() {
                           <div className="space-y-3">
                             {isZipFile ? (
                               <div className="w-24 h-24 lg:w-32 lg:h-32 mx-auto rounded-lg border bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
-                                <Archive className="h-12 w-12 lg:h-16 lg:w-16 text-purple-600" />
+                                <Archive className="h-12 w-12 lg:h-16 lg:w-16 text-[var(--permalink-pink)]" />
                               </div>
                             ) : imagePreview ? (
                               <div className="w-24 h-24 lg:w-32 lg:h-32 mx-auto rounded-lg overflow-hidden border">
@@ -638,14 +638,14 @@ export default function CreatePage() {
                       <div className="text-center flex flex-col items-center justify-center h-full relative cursor-pointer group"
                            onClick={handleGenerativePreview}>
                         <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center mb-3 relative">
-                          <Archive className="h-10 w-10 text-purple-600" />
+                          <Archive className="h-10 w-10 text-[var(--permalink-pink)]" />
                           {loadingGenerative && (
                             <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg">
-                              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></div>
+                              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[var(--permalink-pink)]"></div>
                             </div>
                           )}
                         </div>
-                        <div className="text-sm font-medium text-purple-600">Generative Art</div>
+                        <div className="text-sm font-medium text-[var(--permalink-pink)]">Generative Art</div>
                         <div className="text-xs text-muted-foreground mb-3">Interactive artwork package</div>
                         
                         {/* Preview overlay on hover */}
@@ -677,7 +677,7 @@ export default function CreatePage() {
                       type="button"
                       onClick={handleGenerativePreview}
                       disabled={loadingGenerative}
-                      className="w-full mb-4 bg-purple-600 hover:bg-purple-700 text-white"
+                      className="w-full mb-4 bg-[var(--permalink-pink)] hover:bg-purple-700 text-white"
                     >
                       {loadingGenerative ? (
                         <>
@@ -876,7 +876,7 @@ export default function CreatePage() {
               <div className="flex items-center justify-between p-4 border-b">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
-                    <Archive className="h-4 w-4 text-purple-600" />
+                    <Archive className="h-4 w-4 text-[var(--permalink-pink)]" />
                   </div>
                   <div>
                     <h2 className="font-semibold">Generative Art Preview</h2>

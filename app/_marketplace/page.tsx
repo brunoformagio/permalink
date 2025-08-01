@@ -272,9 +272,9 @@ export default function MarketplacePage() {
                           {item.imageType === 'zip' ? (
                             <div className="text-center p-4">
                               <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center mx-auto mb-2">
-                                <Archive className="h-8 w-8 text-purple-600" />
+                                <Archive className="h-8 w-8 text-[var(--permalink-pink)]" />
                               </div>
-                              <div className="text-sm font-medium text-purple-600">Generative Art</div>
+                              <div className="text-sm font-medium text-[var(--permalink-pink)]">Generative Art</div>
                             </div>
                           ) : item.imageUri ? (
                             <Image
@@ -328,7 +328,7 @@ export default function MarketplacePage() {
                         {/* Thumbnail */}
                         <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
                           {item.imageType === 'zip' ? (
-                            <Archive className="h-8 w-8 text-purple-600" />
+                            <Archive className="h-8 w-8 text-[var(--permalink-pink)]" />
                           ) : item.imageUri ? (
                             <Image
                               unoptimized={true}

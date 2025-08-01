@@ -505,14 +505,14 @@ export default function ERC721ItemPage() {
                   <Badge variant="outline" className="mb-4 !border-white">
                     Generative Preview
                   </Badge>
-                  <Badge variant="default" className="mb-4 bg-white/75 hover:bg-white text-black cursor-pointer"
+                  {/* <Badge variant="default" className="mb-4 bg-white/75 hover:bg-white text-black cursor-pointer"
                     onClick={() => {
                       loadInteractiveContent();
                     }}
                   >
                     Refresh Hash
                     <RefreshCcw className="h-4 w-4 " />
-                  </Badge>
+                  </Badge> */}
                 </div>
               <Card className="mb-6 ">
                 <CardContent className="p-0">
@@ -528,9 +528,9 @@ export default function ERC721ItemPage() {
                       ) : loadingInteractive ? (
                         <div className="text-center">
                           <div className="w-24 h-24 rounded-lg bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center mb-4">
-                            <Loader2 className="h-12 w-12 text-purple-600 animate-spin" />
+                            <Loader2 className="h-12 w-12 text-[var(--permalink-pink)] animate-spin" />
                           </div>
-                          <div className="text-lg font-semibold text-purple-600 mb-2">Loading Interactive Artwork</div>
+                          <div className="text-lg font-semibold text-[var(--permalink-pink)] mb-2">Loading Interactive Artwork</div>
                           <div className="text-sm text-muted-foreground">
                             {isSeriesView ? "Preparing preview..." : "Loading your unique NFT..."}
                           </div>
@@ -538,9 +538,9 @@ export default function ERC721ItemPage() {
                       ) : (
                         <div className="text-center">
                           <div className="w-24 h-24 rounded-lg bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center mb-4">
-                            <Archive className="h-12 w-12 text-purple-600" />
+                            <Archive className="h-12 w-12 text-[var(--permalink-pink)]" />
                           </div>
-                          <div className="text-lg font-semibold text-purple-600 mb-2">Interactive Artwork</div>
+                          <div className="text-lg font-semibold text-[var(--permalink-pink)] mb-2">Interactive Artwork</div>
                           <div className="text-sm text-muted-foreground">
                             {isSeriesView ? "Preview will load automatically" : "Your unique interactive NFT"}
                           </div>
@@ -593,7 +593,7 @@ export default function ERC721ItemPage() {
                       <Badge variant="outline">ERC-721</Badge>
                       <Badge variant="outline">On-Chain Storage</Badge>
                       {displayData.imageType === 'zip' && (
-                        <Badge variant="outline" className="bg-purple-50 text-purple-600 border-purple-200">
+                        <Badge variant="outline" className="bg-purple-50 text-[var(--permalink-pink)] border-purple-200">
                           Interactive
                         </Badge>
                       )}
@@ -781,7 +781,7 @@ export default function ERC721ItemPage() {
                   <CardContent className="p-6">
                     <h3 className="font-semibold mb-4">Current Owner</h3>
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-[var(--permalink-pink)] rounded-full flex items-center justify-center text-white font-semibold">
                         {tokenOwner.slice(2, 4).toUpperCase()}
                       </div>
                       <div>
@@ -814,7 +814,7 @@ export default function ERC721ItemPage() {
                   <CardContent className="p-6">
                     <h3 className="font-semibold mb-4">Artist</h3>
                     <div className="flex items-start gap-3">
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-[var(--permalink-pink)] rounded-full flex items-center justify-center text-white font-semibold">
                         {(artistProfile.artistName || displayData.artist).slice(0, 2).toUpperCase()}
                       </div>
                       <div className="flex-1">
