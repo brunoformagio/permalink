@@ -91,11 +91,11 @@ export function Toolbar({
                       <span className="mr-2"><House className="h-4 w-4" /></span> Home
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
+                  {/* <DropdownMenuItem asChild>
                     <Link href="/marketplace" className="flex items-center">
                       <span className="mr-2"><TrendingUp className="h-4 w-4" /></span> Marketplace
                     </Link>
-                  </DropdownMenuItem>
+                  </DropdownMenuItem> */}
                   <DropdownMenuItem asChild>
                     <Link href="/artist" className="flex items-center">
                       <User className="mr-2 h-4 w-4" /> Profile
