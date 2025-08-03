@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, House, Menu, Plus, User, TrendingUp } from "lucide-react";
+import { ArrowLeft, House, Menu, Plus, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,

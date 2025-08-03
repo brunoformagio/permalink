@@ -217,12 +217,12 @@ export default function Home() {
             <CardContent className="p-6 lg:p-8 text-center">
               {whitelistEnabled === false ? (
                 <>
-                  <h2 className="text-xl lg:text-2xl font-semibold mb-3">Platform Now Public!</h2>
+                  {/* <h2 className="text-xl lg:text-2xl font-semibold mb-3">Platform Now Public!</h2>
                   <p className="text-muted-foreground mb-6">
                     The Permalink platform is now open to everyone. Connect your wallet and start exploring!
-                  </p>
+                  </p> */}
                   <Link href="/main">
-                    <Button className="w-full">
+                    <Button className="w-full" variant="gradient">
                       Enter Platform
                     </Button>
                   </Link>
