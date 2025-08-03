@@ -1,4 +1,4 @@
-# Permalink: Decentralized fully-onchain generative art platform on Etherlink
+# 🔗 Permalink: Decentralized fully-onchain generative art platform on Etherlink
 > Made by Bruno Formagio and FromFriends™.
 - Live Demo: https://permalinkart.vercel.app
 - GitHub Repo: https://github.com/brunoformagio/permalink
