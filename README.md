@@ -1,189 +1,76 @@
-# Permalink - Generative Digital Art Platform
-
-A modern Next.js application for creating, collecting, and trading unique generative digital art on the Etherlink blockchain.
-
-## ✨ Features
-
-- **🎨 Generative Art**: Interactive algorithmic art creation with real-time canvas rendering
-- **🔗 Blockchain Integration**: Built for Etherlink mainnet with wallet connectivity
-- **📱 Responsive Design**: Fully responsive from mobile (428px) to desktop (1400px+)
-- **🖥️ Desktop Optimized**: Multi-column layouts, sidebars, and enhanced UX for larger screens
-- **🎭 Artist Profiles**: Showcase drops and collected artworks
-- **🛠️ Minting Interface**: Upload and mint artwork directly to blockchain
-- **🎮 Interactive Controls**: Play, pause, and randomize generative artworks
-
-## 🏗️ Tech Stack
-
-- **Framework**: Next.js 15 with App Router
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS v4 with responsive breakpoints
-- **UI Components**: Shadcn/ui with Radix UI primitives
-- **Icons**: Lucide React
-- **Theme**: Next Themes with dark mode support
-
-## 📱 Responsive Design
-
-### Mobile First (up to 640px)
-- **Container**: Max 428px width, mobile-optimized navigation
-- **Layout**: Single column, touch-friendly controls
-- **Canvas**: Square aspect ratio, touch gestures
-- **Navigation**: Dropdown menu, bottom navigation bars
-
-### Tablet & Desktop (641px+)
-- **Container**: Up to 1200px width with padding
-- **Layout**: Multi-column grids, sidebars, enhanced spacing
-- **Canvas**: Larger sizes with high-DPI rendering
-- **Navigation**: Horizontal menu items, expanded toolbars
-
-### Large Desktop (1024px+)
-- **Container**: Up to 1400px width
-- **Layout**: Maximum space utilization
-- **Features**: Sticky sidebars, preview panels, enhanced forms
-
-## 📱 Pages
-
-### Landing Page (`/`)
-- **Mobile**: Single column with centered content
-- **Desktop**: Multi-column feature grid, larger hero section
-- Hero section with early access signup
-- Feature showcase with icons
-- Team member profiles in responsive grid
-- Call-to-action for demo app
-
-### Main App (`/main`)
-- **Mobile**: Stacked layout with wallet connection
-- **Desktop**: 8/4 grid with sidebar featuring stats and quick actions
-- Featured drops carousel
-- Latest artworks grid (2 columns on desktop)
-- Platform statistics and recent activity sidebar
-- Wallet connection interface
-
-### Artist Profile (`/artist`)
-- **Mobile**: Vertical profile layout
-- **Desktop**: 4/8 grid with profile sidebar and content area
-- Artist information and bio
-- Drops and collected artworks tabs
-- Address copying functionality
-- Social proof statistics and action buttons
-
-### Artwork Viewer (`/item`)
-- **Mobile**: Full-width canvas with bottom controls
-- **Desktop**: 7/5 grid with large canvas and detailed info panel
-- Interactive generative art canvas (scales to container)
-- Real-time animation controls
-- Artwork attributes and metadata
-- Transaction history and pricing information
-- Buy/mint functionality
-
-### Creation Studio (`/create`)
-- **Mobile**: Single column form
-- **Desktop**: 8/4 grid with form and preview/info panels
-- File upload interface with drag & drop
-- Artwork metadata forms with validation
-- Live preview panel and minting information
-- Tips and cost breakdown sidebar
-
-## 🎨 Generative Art Engine
-
-The app features a custom-built generative art engine with:
-
-- **Responsive Canvas**: Automatically scales to container size
-- **High-DPI Support**: Device pixel ratio optimization for crisp rendering
-- **Scalable Elements**: Shapes and movements scale based on canvas size
-- **Algorithmic Generation**: HSL color palettes and shape systems
-- **Real-time Animation**: RequestAnimationFrame-based animations
-- **Interactive Controls**: Play/pause, randomization, generation tracking
-
-## 🚀 Getting Started
-
-1. **Install dependencies**:
-   ```bash
-   npm install
-   # or
-   pnpm install
-   ```
-
-2. **Run development server**:
-   ```bash
-   npm run dev
-   # or
-   pnpm dev
-   ```
-
-3. **Open in browser**:
-   Navigate to [http://localhost:3000](http://localhost:3000)
-
-## 📂 Project Structure
-
-```
-├── app/                    # Next.js app router pages
-│   ├── main/              # Main app interface (responsive grid)
-│   ├── artist/            # Artist profile page (desktop sidebar)
-│   ├── item/              # Artwork viewer page (large canvas)
-│   ├── create/            # Minting interface (form + preview)
-│   ├── layout.tsx         # Root layout with dark theme
-│   ├── page.tsx           # Landing page (multi-column)
-│   └── globals.css        # Responsive container system
-├── components/            # Reusable components
-│   ├── ui/                # Shadcn UI components
-│   ├── drop-card.tsx      # Artwork card component
-│   ├── generative-art.tsx # Responsive art generation engine
-│   ├── toolbar.tsx        # Responsive navigation toolbar
-│   └── wallet-connection-card.tsx
-├── lib/                   # Utility functions
-│   └── utils.ts          # Tailwind merge utilities
-└── hooks/                 # Custom React hooks
-    └── use-mobile.ts     # Mobile detection
-```
-
-## 🎯 Demo Features
-
-- **Responsive Wallet Connection**: Simulated MetaMask, WalletConnect, and Coinbase wallet integration
-- **Scalable Art Generation**: Real-time algorithmic art that adapts to screen size
-- **Multi-Layout System**: Optimized layouts for mobile, tablet, and desktop
-- **Touch & Mouse Support**: Gesture-optimized interface with hover states
-- **Dark Theme**: Consistent dark mode throughout all breakpoints
-
-## 🔗 Navigation
-
-- **Landing → Main**: Access demo app
-- **Main → Artist**: View creator profiles  
-- **Main → Item**: Interact with artworks
-- **Artist → Item**: Browse creator's works
-- **Responsive Toolbar**: 
-  - Mobile: Dropdown menu with hamburger icon
-  - Desktop: Horizontal navigation with direct links
-
-## 🎨 Design System
-
-The app uses a carefully crafted responsive design system:
-
-- **Breakpoints**: 
-  - Mobile: `< 640px` (max-width 428px)
-  - Tablet: `641px - 1023px` (max-width 1200px)
-  - Desktop: `1024px+` (max-width 1400px)
-- **Color Palette**: Dark background (#0a0a0a) with accent colors
-- **Typography**: Responsive font sizes using `lg:` prefixes
-- **Spacing**: Responsive padding and margins
-- **Grid Systems**: CSS Grid with responsive columns
-- **Border Radius**: 12px standard with responsive variations
-- **Animations**: Smooth transitions and micro-interactions
-
-## 🔧 Development
-
-Built with modern development practices:
-
-- **TypeScript**: Full type safety across all components
-- **ESLint**: Code quality enforcement
-- **Tailwind CSS**: Utility-first responsive styling
-- **Component Architecture**: Modular and reusable responsive components
-- **Performance**: Optimized with Next.js SSR and responsive images
-- **Accessibility**: ARIA labels and keyboard navigation support
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+# Permalink: Decentralized fully-onchain generative art platform on Etherlink
+> Made by Bruno Formagio and FromFriends™.
+- Live Demo: https://permalinkart.vercel.app
+- GitHub Repo: https://github.com/brunoformagio/permalink
+- Demo Video: https://vimeo.com/1106774829
 
 ---
 
-**Note**: This is a demo application showcasing responsive design. Blockchain functionality is simulated for demonstration purposes.
+## 📋 Submission for the Etherlink Hackathon
+
+This project is a submission for the Etherlink Hackathon. We've leveraged Etherlink's technology to build a fully on-chain generative art platform.
+
+## ✨ What is Permalink?
+
+Permalink is a platform where digital artists can mint their generative art as NFTs and sell them to collectors. The key idea is to ensure the art and its ownership are **permanently** and **immutably** stored.
+
+Artists upload their generative art code (e.g., p5.js sketches as a `.zip` file) which is stored **fully on-chain** within the NFT's data on the Etherlink blockchain. This ensures the art can never be lost, altered, or rely on external storage providers.
+
+---
+
+### 🔗 Etherlink Integration: Where Etherlink's tech is used
+
+Etherlink is the backbone of Permalink. Here's how we're using it:
+
+- **Smart Contracts Deployment**: All our smart contracts (ERC1155 for art, and the platform contract) are deployed and running on the **Etherlink Testnet**. This provides a scalable and fast environment for our application.
+- **Fully On-Chain Data**: We store all metadata and the generative art content itself **fully on-chain**. This includes all artworks, artist information, and royalty details. Etherlink's low transaction fees and large block sizes make this true permanence possible.
+- **Fast & Cheap Transactions**: The platform allows users to buy and sell art with very low gas fees and fast transaction confirmation times, thanks to Etherlink's architecture.
+
+#### Connecting And Manage Wallet With Thirdweb
+Thanks to Etherlink's full EVM compatibility, connecting to Permalink is a seamless experience. Users can connect with their favorite Ethereum wallets, such as MetaMask, with no extra setup required beyond adding the Etherlink network.
+
+We also support in-app wallets, allowing users to create a wallet with their Google account for an even simpler onboarding process. This is all handled by the `ConnectButton` component from `thirdweb/react`, as seen in our `components/toolbar.tsx` file.
+
+Our deployed contract addresses on Etherlink Testnet can be found in the `permalink-main/deployments` directory.
+
+### Technical Paper
+
+[Link to our Technical Paper](./TECHNICAL_PAPER.md)
+
+This document provides a detailed explanation of the technical aspects of Permalink, including our smart contract architecture and frontend design.
+
+---
+
+## 🚀 How We Built It
+
+### Tech Stack
+
+![Etherlink](https://img.shields.io/badge/Etherlink-FF5722?style=for-the-badge&logo=tezos&logoColor=white)
+![Next.js](https://img.shields.io/badge/next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
+![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
+![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Solidity](https://img.shields.io/badge/Solidity-363636?style=for-the-badge&logo=solidity&logoColor=white)
+![Hardhat](https://img.shields.io/badge/Hardhat-D6E52E?style=for-the-badge&logo=hardhat&logoColor=black)
+
+- **Frontend**: Next.js, React, TypeScript, Tailwind CSS
+- **Blockchain**: Solidity for smart contracts, deployed on Etherlink.
+- **Development Environment**: Hardhat for Ethereum development, contract testing, and deployment.
+
+### Smart Contracts
+
+Our smart contract architecture is at the core of Permalink.
+
+-   **`Permalink.sol`**: An `ERC-721` contract that handles the minting of generative art NFTs. It stores all artwork metadata and the artwork data itself directly on the blockchain. This contract also manages artist profiles and royalty information, complying with the `ERC-2981` standard.
+
+### Features
+
+-   **Fully On-Chain Storage**: All artwork metadata and the artwork data itself are stored **fully on-chain** on the Etherlink blockchain, ensuring it is as permanent as the NFT itself.
+-   **Generative Art Support**: Artists can upload their generative art projects (e.g., in a `.zip` file) and mint them as interactive NFTs.
+-   **Artist Profiles**: Artists can create and manage their own profiles, showcasing their work and building a following.
+-   **Low-Cost Transactions**: By building on Etherlink, we've made minting and trading art accessible to everyone, with significantly lower gas fees than on other networks.
+
+## Team
+
+-   **[Bruno Formagio](https://www.brunoformagio.dev/en)**: 15+ years of experience of web development and design. Specialized in building solutions focused on usability and scalability, always seeking the best possible experience for the user.
+-   **[FromFriends™](https://from-friends.github.io/)**: Creative developer focused on building innovative platforms that empower artists, collectors and creators in the Web3 ecosystem through thoughtful design and technology.
