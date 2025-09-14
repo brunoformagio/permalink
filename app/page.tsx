@@ -360,23 +360,6 @@ export default function Home() {
         <section className="mb-15 lg:mb-20">
           <h2 className="text-2xl lg:text-3xl font-bold mb-4 lg:mb-8 text-center lg:text-left">Team</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-6">
-            <Card>
-              <CardContent className="p-4 lg:p-6 flex items-center">
-                <Image
-                  src="/team/bruno-avatar.png"
-                  alt="Bruno Formagio"
-                  width={64}
-                  height={64}
-                  className="w-12 h-12 lg:w-16 lg:h-16 rounded-full mr-4 lg:mr-6 flex-shrink-0 object-cover"
-                />
-                <div>
-                  <div className="font-semibold lg:text-lg">Bruno Formagio</div>
-                  <div className="text-muted-foreground text-sm lg:text-base leading-tight">
-                    Digital artist and blockchain developer passionate about merging generative algorithms with decentralized technologies to create new forms of artistic expression.
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
 
             <Card>
               <CardContent className="p-4 lg:p-6 flex items-center">
