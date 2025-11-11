@@ -8,9 +8,15 @@
 
 ---
 
-## 📋 Submission for the Etherlink Hackathon
+## 🏆 Winner “Best Overall” and “Collab Culture” at the official 2025 Etherlink Hackathon
 
-This project is a submission for the Etherlink Hackathon. We've leveraged Etherlink's technology to build a fully on-chain generative art platform.
+> _1st Place: Permalink, the first-place winner in Collab Culture and overall Grand Prize winner, is a fully on-chain generative art platform. Artists upload their generative code, such as a p5.js sketch in a zip, and mint it as an NFT. The artwork and its ownership live entirely on Etherlink, not on external servers, so it can’t be lost or altered. Collectors can buy directly from the platform._
+
+- https://etherlink.encode.club
+- https://medium.com/@etherlink/etherlink-summer-of-code-hackathon-winners-dbd14f22282b
+- https://tezos.com/media-center/2025/etherlink-hackathon/
+
+---
 
 ## ✨ What is Permalink?
 
